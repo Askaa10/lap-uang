@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -14,5 +15,26 @@ export class AuthService {
       secret: token,
       expiresIn: expiresIn,
     });
+  }accessor
+  async login(userLogin: { email: string, password: string }) {
+    const user = await this.Ps.admin.findUnique({
+      where: {
+        email: userLogin.email,
+      },
+    });
+    if (!user || !(await bcrypt.compare(userLogin.password, user.password))) {
+      throw new UnauthorizedException('Email atau password salah');
+    }
+
+    const payload = { sub: user.id, email: user.email };
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      }
+    };
   }
 }
+
