@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { LoginDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,8 +16,9 @@ export class AuthService {
       secret: token,
       expiresIn: expiresIn,
     });
-  }accessor
-  async login(userLogin: { email: string, password: string }) {
+    }
+    
+  async login(userLogin: LoginDto) {
     const user = await this.Ps.admin.findUnique({
       where: {
         email: userLogin.email,
