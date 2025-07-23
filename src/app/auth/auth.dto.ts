@@ -4,6 +4,12 @@ export class LoginDto {
   password: string;
 }
 
+export class registerDto{
+  name: string;
+  email: string;
+  password: string;
+}
+
 
 
 
