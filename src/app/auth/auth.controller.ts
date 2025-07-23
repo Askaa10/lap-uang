@@ -1,12 +1,25 @@
-import { Admin } from './../../../node_modules/.prisma/client/index.d';
-import { Controller, Post, Body, Get, Req, Query, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Req,
+  Query,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './auth.dto';
+import { JwtGuard } from './auth.guard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { RolesGuard } from './roles.guard';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   //   JWT PIS JANGAN LUPA
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles('ADMIN')
   @Get('profile/:id')
   async profile(@Param('id') id: string) {
     return this.authService.myProfile(id);

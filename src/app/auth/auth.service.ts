@@ -12,7 +12,24 @@ import { LoginDTO } from './auth.dto';
 export class AuthService {
   jwtService: any;
   constructor(private Ps: PrismaService) {}
-  async login(userLogin: LoginDTO) {}
+  async login(userLogin: LoginDTO) {
+    const user = await this.Ps.admin.findUnique({
+      where: {
+        email: userLogin.email,
+      },
+    });
+    if (!user || !(await bcrypt.compare(userLogin.password, user.password))) {
+      throw new UnauthorizedException('Email atau password salah');
+    }
+    return {
+      message: 'Login berhasil',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    };
+  }
 
   generateJWT(payload: jwtPayload, expiresIn: string | number, token: string) {
     return this.jwtService.sign(payload, {
