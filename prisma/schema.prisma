@@ -8,7 +8,7 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Admin {
+model admin {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String

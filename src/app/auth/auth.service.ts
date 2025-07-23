@@ -1,42 +1,48 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './auth.dto';
+// Add the following import or define the type if it exists elsewhere
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private Ps: PrismaService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private Ps: PrismaService) {}
 
-  generateJWT(payload: jwtPayload, expiresIn: string | number, token: string) {
-    return this.jwtService.sign(payload, {
-      secret: token,
-      expiresIn: expiresIn,
-    });
-    }
-    
   async login(userLogin: LoginDto) {
     const user = await this.Ps.admin.findUnique({
       where: {
         email: userLogin.email,
       },
     });
+
     if (!user || !(await bcrypt.compare(userLogin.password, user.password))) {
       throw new UnauthorizedException('Email atau password salah');
     }
 
-    const payload = { sub: user.id, email: user.email };
     return {
-      access_token: this.jwtService.sign(payload),
       user: {
-        id: user.id,
         email: user.email,
         name: user.name,
-      }
+      },
     };
   }
-}
 
+  async myProfile(id: string) {
+    const user = await this.Ps.admin.findFirst({
+      where: {
+        id: id,
+      
+      },
+      select:{
+        id: true,
+        email: true,
+        name: true
+      }
+    });
+    return user;
+  }
+}
