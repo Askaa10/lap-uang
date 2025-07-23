@@ -8,7 +8,6 @@ import { JwtAccessTokenStrategy } from './jwtAccessToken.strategy';
 import { JwtRefreshTokenStrategy } from './jwtRefreshToken.strategy';
 
 @Module({
-  imports: [PrismaModule, JwtModule.register({})],
   imports: [JwtModule.register({})],
   providers: [AuthService, PrismaService],
   controllers: [
