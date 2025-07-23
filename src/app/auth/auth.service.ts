@@ -13,7 +13,7 @@ export class AuthService {
   jwtService: any;
   constructor(private Ps: PrismaService) {}
   async login(userLogin: LoginDTO) {
-    const user = await this.Ps.admin.findUnique({
+    const user = await this.Ps.user.findUnique({
       where: {
         email: userLogin.email,
       },
@@ -26,7 +26,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        username: user.username
       },
     };
   }
@@ -40,11 +40,11 @@ export class AuthService {
 
   async register(userRegister: { email: string; password: string }) {
     const hashedPassword = await bcrypt.hash(userRegister.password, 10);
-    const user = await this.Ps.admin.create({
+    const user = await this.Ps.user.create({
       data: {
         email: userRegister.email,
         password: hashedPassword,
-        name: userRegister.email.split('@')[0],
+        username: userRegister.email.split('@')[0],
       },
     });
     return user;
@@ -56,7 +56,7 @@ export class AuthService {
     newPassword: string;
   }) {
     // Cari user berdasarkan email
-    const user = await this.Ps.admin.findUnique({
+    const user = await this.Ps.user.findUnique({
       where: {
         email: userChangePassword.email,
       },
@@ -82,7 +82,7 @@ export class AuthService {
     );
 
     // Update password
-    await this.Ps.admin.update({
+    await this.Ps.user.update({
       where: { id: user.id },
       data: { password: hashedNewPassword },
     });
@@ -92,20 +92,20 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        username: user.username,
       },
     };
   }
 
   async myProfile(id: string) {
-    const user = await this.Ps.admin.findFirst({
+    const user = await this.Ps.user.findFirst({
       where: {
         id: id,
       },
       select: {
         id: true,
         email: true,
-        name: true,
+        username: true,
       },
     });
     return user;
