@@ -11,4 +11,14 @@ export class AuthController {
     login(@Body() userLogin: LoginDTO) {
         return this.authService.login(userLogin);
     }
+
+    @Post('change-password')
+    changePassword(@Body() userChangePassword: { email: string, oldPassword: string, newPassword: string  }) {
+        return this.authService.changePassword(userChangePassword);
+    }
+
+    @Post('register')
+    register(@Body() userRegister: { email: string, password: string }) {
+        return this.authService.register(userRegister);
+    }
 }
