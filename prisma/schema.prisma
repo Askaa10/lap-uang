@@ -14,5 +14,19 @@ model Admin {
   password  String
   name      String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt 
 }
+
+
+model Profile {
+  id String @id @default(uuid())
+  ProfilePicture String
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  
+}
+
+
