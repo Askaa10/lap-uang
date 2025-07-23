@@ -7,9 +7,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 // Add the following import or define the type if it exists elsewhere
 import { LoginDTO } from './auth.dto';
+import { BaseResponse } from 'src/utils/response/base.response';
 
 @Injectable()
-export class AuthService extends BaseResponse {
+export class AuthService extends BaseResponse{
   jwtService: any;
   constructor(private Ps: PrismaService) {
     super();

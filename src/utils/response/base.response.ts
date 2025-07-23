@@ -1,4 +1,4 @@
-class BaseResponse {
+export class BaseResponse {
   _success({
     message = { en: 'Success', id: 'Berhasil' },
     data = null,
