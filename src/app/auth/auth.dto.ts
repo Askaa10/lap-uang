@@ -11,3 +11,8 @@ export class LoginDTO {
   @Length(8)
   password: string;
 }
+
+
+export class ChangePassword {
+  
+}

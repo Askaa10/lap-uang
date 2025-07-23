@@ -1,6 +1,6 @@
 interface jwtPayload {
-  id: number;
-  name: string;
+  id: string;
+  username: string;
   email: string;
   role: "ADMIN" | "USER"
 }

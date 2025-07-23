@@ -8,16 +8,14 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-
-model User {
-  id        String      @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  username  String   @unique
-  refresh_token String? @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// type
+enum FeeType {
+  REGISTRATION // Uang Masuk
+  REREGISTRATION // Daftar Ulang
+  EVENT // Maulid, Haol, dsb
+  EXAM // Ulangan
+  GRADUATION // Akhirussanah
+  OTHER
 }
 
 enum Role {
@@ -25,4 +23,102 @@ enum Role {
   ADMIN
 }
 
+enum Major {
+  RPL
+  TKJ
+}
 
+// models
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  role          Role     @default(USER)
+  username      String   @unique
+  refresh_token String?  @unique
+  school        School?  @relation(fields: [schoolId], references: [id])
+  schoolId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model School {
+  id              String  @id @default(cuid())
+  schoolName      String
+  nip             String  @unique
+  yayasan         String
+  address         String
+  email           String
+  phone           String
+  TA              String
+  HeadSecretariat String
+  HeadSchool      String
+  logoUrl         String?
+
+  userControl User[]
+  students    student[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SchoolFeeItem {
+  id          String   @id @default(cuid())
+  name        String // e.g. "Uang Masuk", "Maulid"
+  description String?
+  amount      Decimal? // bisa null kalau belum diisi
+  type        FeeType  @default(EVENT)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  payments StudentPayment[]
+
+  // Relasi ke struktur tahun ajaran (opsional)
+  feeGroup   FeeGroup? @relation(fields: [feeGroupId], references: [id])
+  feeGroupId String?
+}
+
+model FeeGroup {
+  id           String   @id @default(cuid())
+  name         String // e.g. "2025/2026 - SD", "2024/2025 - SMP"
+  academicYear String // e.g. "2025/2026"
+  level        String // e.g. "SD", "SMP", "SMA"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  items SchoolFeeItem[]
+}
+
+model student {
+  id         String @id @default(uuid())
+  NoInduk    String @unique
+  name       String
+  generation Int
+  class      Int
+  Major      Major  @default(RPL)
+
+  school   School @relation(fields: [schoolId], references: [id])
+  schoolId String
+
+  payments StudentPayment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StudentPayment {
+  id        String  @id @default(cuid())
+  student   student @relation(fields: [studentId], references: [id])
+  studentId String
+
+  feeItem   SchoolFeeItem @relation(fields: [feeItemId], references: [id])
+  feeItemId String
+
+  amountPaid    Decimal
+  paymentDate   DateTime
+  transactionNo String
+  note          String?
+  createdAt     DateTime @default(now())
+}

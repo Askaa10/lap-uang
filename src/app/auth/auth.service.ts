@@ -9,26 +9,62 @@ import * as bcrypt from 'bcrypt';
 import { LoginDTO } from './auth.dto';
 
 @Injectable()
-export class AuthService {
+export class AuthService extends BaseResponse {
   jwtService: any;
-  constructor(private Ps: PrismaService) {}
+  constructor(private Ps: PrismaService) {
+    super();
+  }
   async login(userLogin: LoginDTO) {
     const user = await this.Ps.user.findUnique({
       where: {
         email: userLogin.email,
       },
     });
-    if (!user || !(await bcrypt.compare(userLogin.password, user.password))) {
-      throw new UnauthorizedException('Email atau password salah');
+    if (!user) {
+      throw new NotFoundException('Email tidak ditemukan');
     }
-    return {
-      message: 'Login berhasil',
-      user: {
+    const isPasswordValid = await bcrypt.compare(
+      userLogin.password,
+      user.password,
+    );
+    if (isPasswordValid) {
+      const jwt_payload: jwtPayload = {
         id: user.id,
         email: user.email,
-        username: user.username
-      },
-    };
+        username: user.username,
+        role: user.role,
+      };
+      const refresh_token = this.generateJWT(
+        jwt_payload,
+        '7d',
+        process.env.JWT_SECRET,
+      );
+      const access_token = this.generateJWT(
+        jwt_payload,
+        '1h',
+        process.env.JWT_SECRET,
+      );
+
+      await this.Ps.user.update({
+        where: { id: user.id },
+        data: { refresh_token: refresh_token }, // Update lastLogin field
+      });
+
+      return this._success({
+        auth: {
+          access_token: access_token,
+          refresh_token: refresh_token,
+          alg: 'HS256',
+          token_type: 'Bearer',
+          typ: 'JWT',
+          scope: ["Read", "Write", "Delete", "Update"],
+        },
+        data: { ...user },
+        links: {
+          self: '/auth/login',
+        },
+      });
+    }
   }
 
   generateJWT(payload: jwtPayload, expiresIn: string | number, token: string) {
