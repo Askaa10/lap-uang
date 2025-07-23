@@ -9,11 +9,11 @@ import { JwtRefreshTokenStrategy } from './jwtRefreshToken.strategy';
 
 @Module({
   imports: [JwtModule.register({})],
-  providers: [AuthService, PrismaService],
+  providers: [AuthService, PrismaService,  JwtAccessTokenStrategy,
+    JwtRefreshTokenStrategy,],
   controllers: [
     AuthController,
-    JwtAccessTokenStrategy,
-    JwtRefreshTokenStrategy,
+   
   ],
 })
 export class AuthModule {}

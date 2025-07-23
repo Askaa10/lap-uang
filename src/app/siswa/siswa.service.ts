@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStudentDto, UpdateStudentDto } from './siswa.dto';
+import { BaseResponse } from 'src/utils/response/base.response';
 
 
 @Injectable()
