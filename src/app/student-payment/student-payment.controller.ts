@@ -1,14 +1,13 @@
 import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
-import { SchoolFeeService } from './school-fee.service';
-import { CreateSchoolFeeItemDto, UpdateSchoolFeeItemDto } from './school-fee.dto';
+import { StudentPaymentService } from './student-payment.service';
+import { CreateStudentPaymentDto, UpdateStudentPaymentDto } from './student-payment.dto';
 
-
-@Controller('school-fee')
-export class SchoolFeeController {
-  constructor(private readonly service: SchoolFeeService) {}
+@Controller('student-payments')
+export class StudentPaymentController {
+  constructor(private readonly service: StudentPaymentService) {}
 
   @Post()
-  async create(@Body() dto: CreateSchoolFeeItemDto) {
+  async create(@Body() dto: CreateStudentPaymentDto) {
     return await this.service.create(dto);
   }
 
@@ -23,7 +22,7 @@ export class SchoolFeeController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateSchoolFeeItemDto) {
+  async update(@Param('id') id: string, @Body() dto: UpdateStudentPaymentDto) {
     return await this.service.update(id, dto);
   }
 

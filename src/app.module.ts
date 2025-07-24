@@ -7,9 +7,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { SiswaModule } from './app/siswa/siswa.module';
 import { SchoolModule } from './app/school/school.module';
 import { SchoolFeeModule } from './app/school-fee/school-fee.module';
+import { FeeGroupModule } from './app/fee-group/fee-group.module';
+import { StudentPaymentModule } from './app/student-payment/student-payment.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, SiswaModule, SchoolModule, SchoolFeeModule],
+  imports: [PrismaModule, AuthModule, SiswaModule, SchoolModule, SchoolFeeModule, FeeGroupModule, StudentPaymentModule],
   controllers: [AppController],
   providers: [AppService],
 })
