@@ -31,4 +31,9 @@ export class SchoolFeeController {
   async remove(@Param('id') id: string) {
     return await this.service.remove(id);
   }
+
+  @Post('create-bulk-fe')
+  async createBulk(@Body() dto: CreateSchoolFeeItemDto[]) {
+    return await this.service.createBulkFe(dto);
+  }
 }

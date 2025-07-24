@@ -64,7 +64,7 @@ model School {
 }
 
 model SchoolFeeItem {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   name        String // e.g. "Uang Masuk", "Maulid"
   description String?
   amount      Decimal? // bisa null kalau belum diisi
@@ -81,7 +81,7 @@ model SchoolFeeItem {
 }
 
 model FeeGroup {
-  id           String   @id @default(cuid())
+  id           String   @id @default(uuid())
   name         String // e.g. "2025/2026 - SD", "2024/2025 - SMP"
   academicYear String // e.g. "2025/2026"
   level        String // e.g. "SD", "SMP", "SMA"
@@ -109,7 +109,7 @@ model student {
 }
 
 model StudentPayment {
-  id        String  @id @default(cuid())
+  id        String  @id @default(uuid())
   student   student @relation(fields: [studentId], references: [id])
   studentId String
 

@@ -107,4 +107,23 @@ export class SiswaService extends BaseResponse {
       },
     });
   }
+
+
+  async createBulk(payload : CreateStudentDto[]) {
+    const students = await this.prisma.student.createMany({ data: payload });
+
+    return this._success({
+      message: {
+        id: 'Siswa berhasil ditambahkan',
+        en: 'Student created successfully',
+      },
+      data: students,
+      auth: null,
+      links: {
+        self: '/students/tambah-siswa',
+      },
+      statusCode: 201,
+      statusText: 'Created',
+    });
+  }
 }

@@ -39,5 +39,11 @@ import { SiswaService } from './siswa.service';
     remove(@Param('id') id: string) {
       return this.siswaService.remove(id);
     }
+
+
+    @Post('tambah-siswa-banyak')
+    createBulk(@Body() dto: CreateStudentDto[]) {
+      return this.siswaService.createBulk(dto);
+    }
   }
   

@@ -9,9 +9,10 @@ import { SchoolModule } from './app/school/school.module';
 import { SchoolFeeModule } from './app/school-fee/school-fee.module';
 import { FeeGroupModule } from './app/fee-group/fee-group.module';
 import { StudentPaymentModule } from './app/student-payment/student-payment.module';
+import { MasterDataModule } from './app/master-data/master-data.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, SiswaModule, SchoolModule, SchoolFeeModule, FeeGroupModule, StudentPaymentModule],
+  imports: [PrismaModule, AuthModule, SiswaModule, SchoolModule, SchoolFeeModule, FeeGroupModule, StudentPaymentModule, MasterDataModule],
   controllers: [AppController],
   providers: [AppService],
 })
