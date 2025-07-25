@@ -10,6 +10,7 @@ export class BaseResponse {
     links = {},
     auth = null,
     errors = null,
+    others = {}
   } = {}) {
     const timestamp = new Date().toISOString();
     const traceId =
@@ -46,6 +47,7 @@ export class BaseResponse {
       pagination,
       errors,
       links,
+      others
     };
   }
 }

@@ -18,6 +18,15 @@ enum FeeType {
   OTHER
 }
 
+enum ExpenseType {
+  ELECTRICITY // Listrik
+  WATER // Air
+  SALARY // Gaji
+  MAINTENANCE // Perawatan
+  EVENT // Event sekolah (misalnya Maulid, dll.)
+  OTHER // Pengeluaran lain
+}
+
 enum Role {
   USER
   ADMIN
@@ -29,6 +38,19 @@ enum Major {
 }
 
 // models
+
+model SchoolExpense {
+  id          String      @id @default(uuid())
+  school      School      @relation(fields: [schoolId], references: [id])
+  schoolId    String
+  type        ExpenseType // Kategori pengeluaran
+  description String // Keterangan pengeluaran, misal "Bayar Listrik"
+  amount      Decimal
+  expenseDate DateTime    @default(now())
+  note        String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
 
 model User {
   id            String   @id @default(uuid())
@@ -58,6 +80,7 @@ model School {
 
   userControl User[]
   students    student[]
+  expenses    SchoolExpense[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

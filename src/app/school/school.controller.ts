@@ -1,5 +1,4 @@
 import { SchoolService } from './school.service';
-import { School } from './../../../node_modules/.prisma/client/index.d';
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CreateSchoolDto } from './school.dto';
 

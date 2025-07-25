@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
 import { StudentPaymentService } from './student-payment.service';
-import { CreateStudentPaymentDto, UpdateStudentPaymentDto } from './student-payment.dto';
+import { CreateStudentPaymentBulkDto, CreateStudentPaymentDto, UpdateStudentPaymentDto } from './student-payment.dto';
 
 @Controller('student-payments')
 export class StudentPaymentController {
@@ -29,5 +29,9 @@ export class StudentPaymentController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return await this.service.remove(id);
+  }
+  @Post("create-bulk")
+  async createMany(@Body() body: CreateStudentPaymentBulkDto[]) {
+    return this.service.createMany(body);
   }
 }
