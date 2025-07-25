@@ -145,3 +145,5 @@ model StudentPayment {
   note          String?
   createdAt     DateTime @default(now())
 }
+
+
