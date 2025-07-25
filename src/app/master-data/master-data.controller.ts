@@ -9,4 +9,9 @@ export class MasterDataController {
   async list() {
     return this.service.getMasterData();
   }
+
+  @Get('payment-table')
+  async getData() {
+    return this.service.getPaymentTable();
+  }
 }
