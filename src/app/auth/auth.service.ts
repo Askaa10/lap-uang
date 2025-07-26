@@ -8,71 +8,79 @@ import * as bcrypt from 'bcrypt';
 // Add the following import or define the type if it exists elsewhere
 import { LoginDTO } from './auth.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
-export class AuthService extends BaseResponse{
-  jwtService: any;
-  constructor(private Ps: PrismaService) {
+export class AuthService extends BaseResponse {
+  
+  constructor(private Ps: PrismaService, private jwtService: JwtService) {
     super();
   }
-  async login(userLogin: LoginDTO) {
-    const user = await this.Ps.user.findUnique({
-      where: {
-        email: userLogin.email,
-      },
-    });
-    if (!user) {
-      throw new NotFoundException('Email tidak ditemukan');
-    }
-    const isPasswordValid = await bcrypt.compare(
-      userLogin.password,
-      user.password,
-    );
-    if (isPasswordValid) {
-      const jwt_payload: jwtPayload = {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      };
-      const refresh_token = this.generateJWT(
-        jwt_payload,
-        '7d',
-        process.env.JWT_SECRET,
-      );
-      const access_token = this.generateJWT(
-        jwt_payload,
-        '1h',
-        process.env.JWT_SECRET,
-      );
-
-      await this.Ps.user.update({
-        where: { id: user.id },
-        data: { refresh_token: refresh_token }, // Update lastLogin field
-      });
-
-      return this._success({
-        auth: {
-          access_token: access_token,
-          refresh_token: refresh_token,
-          alg: 'HS256',
-          token_type: 'Bearer',
-          typ: 'JWT',
-          scope: ["Read", "Write", "Delete", "Update"],
-        },
-        data: { ...user },
-        links: {
-          self: '/auth/login',
-        },
-      });
-    }
-  }
-
+  
   generateJWT(payload: jwtPayload, expiresIn: string | number, token: string) {
     return this.jwtService.sign(payload, {
       secret: token,
       expiresIn: expiresIn,
     });
+  }
+  async login(userLogin: LoginDTO) {
+    try {
+      const user = await this.Ps.user.findUnique({
+        where: {
+          email: userLogin.email,
+        },
+      });
+      // if (!user) {
+      //   throw new NotFoundException('Email tidak ditemukan');
+      // }
+      const isPasswordValid = await bcrypt.compare(
+        userLogin.password,
+        user.password,
+      );
+      if (isPasswordValid) {
+        const jwt_payload: jwtPayload =  {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          role: user.role,
+        };
+        const refresh_token =  this.generateJWT(
+          jwt_payload,
+          7 * 24 * 60 * 60, // 7 days
+          process.env.JWT_SECRET,
+        );
+        const access_token =  this.generateJWT(
+          jwt_payload,
+          1 * 60 * 60, // 1 hour
+          process.env.JWT_SECRET ,
+        );
+
+        await this.Ps.user.update({
+          where: { id: user.id },
+          data: { refresh_token: refresh_token }, // Update lastLogin field
+        });
+
+        return this._success({
+          auth: {
+            access_token: access_token,
+            refresh_token: refresh_token,
+            alg: 'HS256',
+            token_type: 'Bearer',
+            typ: 'JWT',
+            scope: ['Read', 'Write', 'Delete', 'Update'],
+          },
+          data: { ...user },
+          links: {
+            self: '/auth/login',
+          },
+        });
+      } else {
+        throw new UnauthorizedException('Password salah');
+      }
+    } catch (error) {
+      console.log(error);
+      // throw new NotFoundException('User not found');
+    }
   }
 
   async register(userRegister: { email: string; password: string }) {

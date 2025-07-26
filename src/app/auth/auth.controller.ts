@@ -22,11 +22,11 @@ export class AuthController {
   @Roles('ADMIN')
   @Get('profile/:id')
   async profile(@Param('id') id: string) {
-    return this.authService.myProfile(id);
+    return await  this.authService.myProfile(id);
   }
   @Post('login')
-  login(@Body() userLogin: LoginDTO) {
-    return this.authService.login(userLogin);
+ async login(@Body() userLogin: LoginDTO) {
+    return await this.authService.login(userLogin);
   }
 
   @Post('change-password')

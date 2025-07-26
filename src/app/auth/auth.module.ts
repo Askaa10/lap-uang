@@ -12,8 +12,7 @@ import { JwtRefreshTokenStrategy } from './jwtRefreshToken.strategy';
   providers: [AuthService, PrismaService,  JwtAccessTokenStrategy,
     JwtRefreshTokenStrategy,],
   controllers: [
-    AuthController,
-   
+    AuthController,   
   ],
 })
 export class AuthModule {}
