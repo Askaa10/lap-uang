@@ -51,7 +51,17 @@ export class ReportService extends BaseResponse {
       };
     });
 
-    return result;
+    return  this._success({
+      message: {
+        id: "berhasil mendapatkan data payment",
+        en: ""
+      },
+      auth: null,
+      data: result,
+      links: {
+        self: "/report/spp"
+      }
+    });
   }
 
   bulanKeNama(index: number): string {
@@ -111,7 +121,17 @@ export class ReportService extends BaseResponse {
       };
     });
 
-    return result;
+    return  this._success({
+      message: {
+        id: "berhasil mendapatkan data payment",
+        en: ""
+      },
+      auth: null,
+      data: result,
+      links: {
+        self: "/report/lainnya"
+      }
+    });
   }
 
   async getTunggakanReport() {
