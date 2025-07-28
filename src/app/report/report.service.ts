@@ -135,15 +135,42 @@ export class ReportService extends BaseResponse {
 
       const sisaTunggakan = TAGIHAN_TOTAL - totalBayar;
 
-      return {
-        kelas: `A${s.class}`,
-        noInduk: s.NoInduk,
-        nama: s.name,
-        status: sisaTunggakan > 0 ? 'Menunggak' : 'Tidak Menunggak',
-        tunggakanAwal: sisaTunggakan > 0 ? TAGIHAN_TOTAL : 0,
-        angsuran: totalBayar,
-        sisaTunggakan: sisaTunggakan > 0 ? sisaTunggakan : 0,
-      };
+      // Build paymentMap for other payment types
+      const paymentMap = new Map<string, number>();
+      s.payments.forEach((p) => {
+        const key = p.feeItem.name;
+        const prev = paymentMap.get(key) || 0;
+        paymentMap.set(key, prev + Number(p.amountPaid));
+      });
+
+      const total = [...paymentMap.values()].reduce((a, b) => a + b, 0);
+
+      return this._success({
+        message: {
+          id: 'report.tunggakan.success',
+          en: 'Tunggakan report retrieved successfully',
+        },
+        auth: null,
+        data: {
+          kelas: `A${s.class}`,
+          noInduk: s.NoInduk,
+          nama: s.name,
+          uangMasuk: paymentMap.get('Uang Masuk') || 0,
+          daftarUlang: paymentMap.get('Daftar Ulang') || 0,
+          muharrom: paymentMap.get('Muharrom') || 0,
+          hsn: paymentMap.get('HSN') || 0,
+          haol: paymentMap.get('Haol') || 0,
+          maulid: paymentMap.get('Maulid') || 0,
+          rajab: paymentMap.get('Rajab') || 0,
+          ulangan: paymentMap.get('Ulangan') || 0,
+          akhirussanah: paymentMap.get('Akhirussanah') || 0,
+          jumlah: total,
+        },
+        links:{
+          self: `/report/tunggakan/${s.NoInduk}`,
+          student: `/students/${s.NoInduk}`
+        }
+      });
     });
   }
 }
