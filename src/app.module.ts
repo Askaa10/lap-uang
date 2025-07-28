@@ -12,9 +12,10 @@ import { StudentPaymentModule } from './app/student-payment/student-payment.modu
 import { MasterDataModule } from './app/master-data/master-data.module';
 import { StatisticModule } from './app/statistic/statistic.module';
 import { ExpenseModule } from './app/expense/expense.module';
+import { ReportModule } from './app/report/report.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, SiswaModule, SchoolModule, SchoolFeeModule, FeeGroupModule, StudentPaymentModule, MasterDataModule, StatisticModule, ExpenseModule],
+  imports: [PrismaModule, AuthModule, SiswaModule, SchoolModule, SchoolFeeModule, FeeGroupModule, StudentPaymentModule, MasterDataModule, StatisticModule, ExpenseModule, ReportModule],
   controllers: [AppController],
   providers: [AppService],
 })
