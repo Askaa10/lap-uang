@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDTO } from './auth.dto';
+import { LoginDTO, ResetPasswordDTO } from './auth.dto';
 import { JwtGuard } from './auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RolesGuard } from './roles.guard';
@@ -22,11 +22,11 @@ export class AuthController {
   @Roles('ADMIN')
   @Get('profile/:id')
   async profile(@Param('id') id: string) {
-    return this.authService.myProfile(id);
+    return await this.authService.myProfile(id);
   }
   @Post('login')
-  login(@Body() userLogin: LoginDTO) {
-    return this.authService.login(userLogin);
+  async login(@Body() userLogin: LoginDTO) {
+    return await this.authService.login(userLogin);
   }
 
   @Post('change-password')
@@ -44,5 +44,20 @@ export class AuthController {
   @Post('register')
   register(@Body() userRegister: { email: string; password: string }) {
     return this.authService.register(userRegister);
+  }
+
+  @Post('forgot-password')
+  async forgotPassowrd(@Body('email') email: string) {
+    console.log('email', email);
+    return this.authService.forgotPassword(email);
+  }
+
+  @Post('reset-password/:user_id/:token') // url yang dibuat pada endpont harus sama dengan ketika kita membuat link pada service forgotPassword
+  async resetPassword(
+    @Param('user_id') user_id: string,
+    @Param('token') token: string,
+    @Body() payload: ResetPasswordDTO,
+  ) {
+    return this.authService.resetPassword(user_id, token, payload);
   }
 }

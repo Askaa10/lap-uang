@@ -8,142 +8,99 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// type
-enum FeeType {
-  REGISTRATION // Uang Masuk
-  REREGISTRATION // Daftar Ulang
-  EVENT // Maulid, Haol, dsb
-  EXAM // Ulangan
-  GRADUATION // Akhirussanah
-  OTHER
-}
 
-enum ExpenseType {
-  ELECTRICITY // Listrik
-  WATER // Air
-  SALARY // Gaji
-  MAINTENANCE // Perawatan
-  EVENT // Event sekolah (misalnya Maulid, dll.)
-  OTHER // Pengeluaran lain
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String   // hashed password
+  role      Role     @default(ADMIN)
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
-  USER
   ADMIN
+  STAFF
+  VIEWER
 }
 
-enum Major {
-  RPL
-  TKJ
-}
-
-// models
-
-model SchoolExpense {
-  id          String      @id @default(uuid())
-  school      School      @relation(fields: [schoolId], references: [id])
-  schoolId    String
-  type        ExpenseType // Kategori pengeluaran
-  description String // Keterangan pengeluaran, misal "Bayar Listrik"
-  amount      Decimal
-  expenseDate DateTime    @default(now())
-  note        String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-}
-
-model User {
+model SchoolProfile {
   id            String   @id @default(uuid())
-  email         String   @unique
-  password      String
-  role          Role     @default(USER)
-  username      String   @unique
-  refresh_token String?  @unique
-  school        School?  @relation(fields: [schoolId], references: [id])
-  schoolId      String?
+  name          String   // Nama sekolah
+  address       String?
+  phone         String?
+  headmaster    String?
+  academicYear  String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
-model School {
-  id              String  @id @default(uuid())
-  schoolName      String
-  nip             String  @unique
-  yayasan         String
-  address         String
-  email           String
-  phone           String
-  TA              String
-  HeadSecretariat String
-  HeadSchool      String
-  logoUrl         String?
-
-  userControl User[]
-  students    student[]
-  expenses    SchoolExpense[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model SchoolFeeItem {
-  id          String   @id @default(uuid())
-  name        String // e.g. "Uang Masuk", "Maulid"
-  description String?
-  amount      Decimal? // bisa null kalau belum diisi
-  type        FeeType  @default(EVENT)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  payments StudentPayment[]
-
-  // Relasi ke struktur tahun ajaran (opsional)
-  feeGroup   FeeGroup? @relation(fields: [feeGroupId], references: [id])
-  feeGroupId String?
-}
-
-model FeeGroup {
-  id           String   @id @default(uuid())
-  name         String // e.g. "2025/2026 - SD", "2024/2025 - SMP"
-  academicYear String // e.g. "2025/2026"
-  level        String // e.g. "SD", "SMP", "SMA"
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  items SchoolFeeItem[]
-}
-
-model student {
-  id         String @id @default(uuid())
-  NoInduk    String @unique
+model Student {
+  id         String     @id @default(uuid())
+  studentId  String     @unique
   name       String
-  generation Int
-  class      Int
-  Major      Major  @default(RPL)
-
-  school   School @relation(fields: [schoolId], references: [id])
-  schoolId String
-
-  payments StudentPayment[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  dorm       String?
+  sppTariff  Int
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  payments   Payment[]
+  arrears    Arrear[]
 }
 
-model StudentPayment {
-  id        String  @id @default(uuid())
-  student   student @relation(fields: [studentId], references: [id])
-  studentId String
-
-  feeItem   SchoolFeeItem @relation(fields: [feeItemId], references: [id])
-  feeItemId String
-
-  amountPaid    Decimal
-  paymentDate   DateTime
-  transactionNo String
-  note          String?
-  createdAt     DateTime @default(now())
+model Payment {
+  id         String     @id @default(uuid())
+  studentId  String
+  student    Student    @relation(fields: [studentId], references: [id])
+  date       DateTime
+  amount     Int
+  method     String?
+  month      Int?
+  year       Int?
+  receipt    Receipt?
+  createdAt  DateTime   @default(now())
 }
 
+model Receipt {
+  id         String     @id @default(uuid())
+  paymentId  String     @unique
+  payment    Payment    @relation(fields: [paymentId], references: [id])
+  printedAt  DateTime   @default(now())
+  printedBy  String
+}
 
+model Arrear {
+  id         String     @id @default(uuid())
+  studentId  String
+  student    Student    @relation(fields: [studentId], references: [id])
+  month      Int
+  year       Int
+  amount     Int
+  resolved   Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+}
+
+model ExpenseCategory {
+  id         String     @id @default(uuid())
+  name       String     @unique
+  budget     Int
+  expenses   Expense[]
+}
+
+model Expense {
+  id               String           @id @default(uuid())
+  categoryId       String
+  category         ExpenseCategory  @relation(fields: [categoryId], references: [id])
+  date             DateTime
+  amount           Int
+  description      String
+  createdAt        DateTime         @default(now())
+}
+
+model InitialBalance {
+  id         String     @id @default(uuid())
+  description String
+  amount     Int
+  year       Int
+  createdAt  DateTime   @default(now())
+}
