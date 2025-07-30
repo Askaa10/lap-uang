@@ -8,11 +8,10 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
-  password  String   // hashed password
+  password  String // hashed password
   role      Role     @default(ADMIN)
   name      String?
   createdAt DateTime @default(now())
@@ -26,81 +25,90 @@ enum Role {
 }
 
 model SchoolProfile {
-  id            String   @id @default(uuid())
-  name          String   // Nama sekolah
-  address       String?
-  phone         String?
-  headmaster    String?
-  academicYear  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String // Nama sekolah
+  foundation   String 
+  address      String?
+  phone        String?
+  headmaster   String?
+  academicYear String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum Major {
+  RPL
+  TKJ
 }
 
 model Student {
-  id         String     @id @default(uuid())
-  studentId  String     @unique
-  name       String
-  dorm       String?
-  sppTariff  Int
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  payments   Payment[]
-  arrears    Arrear[]
+  id          String    @id @default(uuid())
+  studentId   String    @unique
+  name        String
+  regisNumber String
+  dorm        String?
+  generation  Int
+  major       Major
+  sppTariff   Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  payments    Payment[]
+  arrears     Arrear[]
 }
 
 model Payment {
-  id         String     @id @default(uuid())
-  studentId  String
-  student    Student    @relation(fields: [studentId], references: [id])
-  date       DateTime
-  amount     Int
-  method     String?
-  month      Int?
-  year       Int?
-  receipt    Receipt?
-  createdAt  DateTime   @default(now())
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  date      DateTime
+  amount    Int
+  method    String?
+  month     Int?
+  year      Int?
+  receipt   Receipt?
+  createdAt DateTime @default(now())
 }
 
 model Receipt {
-  id         String     @id @default(uuid())
-  paymentId  String     @unique
-  payment    Payment    @relation(fields: [paymentId], references: [id])
-  printedAt  DateTime   @default(now())
-  printedBy  String
+  id        String   @id @default(uuid())
+  paymentId String   @unique
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  printedAt DateTime @default(now())
+  printedBy String
 }
 
 model Arrear {
-  id         String     @id @default(uuid())
-  studentId  String
-  student    Student    @relation(fields: [studentId], references: [id])
-  month      Int
-  year       Int
-  amount     Int
-  resolved   Boolean    @default(false)
-  createdAt  DateTime   @default(now())
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  month     Int
+  year      Int
+  amount    Int
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model ExpenseCategory {
-  id         String     @id @default(uuid())
-  name       String     @unique
-  budget     Int
-  expenses   Expense[]
+  id       String    @id @default(uuid())
+  name     String    @unique
+  budget   Int
+  expenses Expense[]
 }
 
 model Expense {
-  id               String           @id @default(uuid())
-  categoryId       String
-  category         ExpenseCategory  @relation(fields: [categoryId], references: [id])
-  date             DateTime
-  amount           Int
-  description      String
-  createdAt        DateTime         @default(now())
+  id          String          @id @default(uuid())
+  categoryId  String
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  date        DateTime
+  amount      Int
+  description String
+  createdAt   DateTime        @default(now())
 }
 
 model InitialBalance {
-  id         String     @id @default(uuid())
+  id          String   @id @default(uuid())
   description String
-  amount     Int
-  year       Int
-  createdAt  DateTime   @default(now())
+  amount      Int
+  year        Int
+  createdAt   DateTime @default(now())
 }
