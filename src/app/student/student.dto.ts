@@ -1,3 +1,5 @@
+import { Major } from "./student.enum";
+
 export class StudentDto {
   id?: string;
   name?: string;
@@ -11,7 +13,7 @@ export class CreateStudentDto {
   regisNumber: string;
   dorm?: string;
   generation: number;
-  major: 'RPL' | 'TKJ';
+  major: Major;
 }
 
 
