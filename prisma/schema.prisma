@@ -9,25 +9,37 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  password  String // hashed password
-  role      Role     @default(ADMIN)
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String          @id @default(uuid())
+  username      String          @unique
+  password      String // hashed password
+  email         String          @unique
+  role          Role            @default(ADMIN)
+  name          String?
+  refresh_token String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  ResetPassword ResetPassword[]
+}
+
+model ResetPassword {
+  id        String   @id @default(uuid()) // ID unik untuk resetPassword
+  userId    String // Foreign key ke tabel User
+  token     String // Token reset
+  createdAt DateTime @default(now()) // Tanggal dibuat
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
   ADMIN
   STAFF
+  USER
   VIEWER
 }
 
 model SchoolProfile {
   id           String   @id @default(uuid())
   name         String // Nama sekolah
-  foundation   String 
+  foundation   String
   address      String?
   phone        String?
   headmaster   String?
