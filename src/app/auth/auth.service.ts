@@ -247,8 +247,4 @@ export class AuthService extends BaseResponse {
     });
   }
 }
-<<<<<<< HEAD
 
-//tambah
-=======
->>>>>>> parent of e0338ab (fix)
