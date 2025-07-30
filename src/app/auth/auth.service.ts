@@ -1,4 +1,7 @@
+import { name } from './../../../node_modules/@types/ejs/index.d';
 import {
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -6,17 +9,22 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 // Add the following import or define the type if it exists elsewhere
-import { LoginDTO } from './auth.dto';
+import { LoginDTO, ResetPasswordDTO } from './auth.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from '../mail/mail.service';
+import { hash } from 'bcrypt';
 
 @Injectable()
 export class AuthService extends BaseResponse {
-  
-  constructor(private Ps: PrismaService, private jwtService: JwtService) {
+  constructor(
+    private Ps: PrismaService,
+    private jwtService: JwtService,
+    private ms: MailService,
+  ) {
     super();
   }
-  
+
   generateJWT(payload: jwtPayload, expiresIn: string | number, token: string) {
     return this.jwtService.sign(payload, {
       secret: token,
@@ -38,21 +46,21 @@ export class AuthService extends BaseResponse {
         user.password,
       );
       if (isPasswordValid) {
-        const jwt_payload: jwtPayload =  {
+        const jwt_payload: jwtPayload = {
           id: user.id,
           email: user.email,
           username: user.username,
           role: user.role,
         };
-        const refresh_token =  this.generateJWT(
+        const refresh_token = this.generateJWT(
           jwt_payload,
           7 * 24 * 60 * 60, // 7 days
           process.env.JWT_SECRET,
         );
-        const access_token =  this.generateJWT(
+        const access_token = this.generateJWT(
           jwt_payload,
           1 * 60 * 60, // 1 hour
-          process.env.JWT_SECRET ,
+          process.env.JWT_SECRET,
         );
 
         await this.Ps.user.update({
@@ -154,6 +162,89 @@ export class AuthService extends BaseResponse {
       },
     });
     return user;
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.Ps.user.findFirst({
+      where: {
+        email: email,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        'Email tidak ditemukan',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+    const token = Math.floor(100000 + Math.random() * 900000); // membuat token
+    await this.ms.sendForgotPassword({
+      email: email,
+      name: user.username,
+      otpToken: token,
+      userId: user.id,
+    });
+
+    await this.Ps.resetPassword.create({
+      data: {
+        userId: user.id,
+        token: `${token}`,
+      },
+    }); // menyimpan token dan id ke tabel reset password
+
+    return this._success({
+      auth: null,
+      data: { ...user },
+      links: {
+        self: '/auth/login',
+      },
+    });
+  }
+
+  async resetPassword(
+    userId: string,
+    token: string,
+    payload: ResetPasswordDTO,
+  ) {
+    const userToken = await this.Ps.resetPassword.findFirst({
+      //cek apakah user_id dan token yang sah pada tabel reset password
+      where: {
+        userId: userId,
+        token: token,
+      },
+    });
+
+    if (!userToken) {
+      throw new HttpException(
+        'Token tidak valid',
+        HttpStatus.UNPROCESSABLE_ENTITY, // jika tidak sah , berikan pesan token tidak valid
+      );
+    }
+
+    payload.new_password = await hash(payload.new_password, 12); //hash password
+    await this.Ps.user.update({
+      // ubah password lama dengan password baru
+      data: {
+        password: payload.new_password,
+      },
+      where: {
+        id: userId,
+      },
+    });
+    await this.Ps.resetPassword.delete({
+      // hapus semua token pada tabel reset password yang mempunyai user_id yang dikirim, agar tidak bisa digunakan kembali
+      where: {
+        id: userId,
+      },
+    });
+
+    return this._success({
+      auth: null,
+      data: { ...payload, userId, token },
+      links: {
+        self: '/auth/login',
+      },
+    });
   }
 }
 
