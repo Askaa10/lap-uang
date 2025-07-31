@@ -8,6 +8,7 @@ import { StudentModule } from './app/student/student.module';
 import { PaymentModule } from './app/payment/payment.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ReceiptsModule } from './app/receipts/receipts.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     SchoolProfileModule,
     StudentModule,
     PaymentModule,
+    ReceiptsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

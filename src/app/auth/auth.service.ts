@@ -174,6 +174,8 @@ export class AuthService extends BaseResponse {
       userId: user.id,
     });
 
+    
+
     const resetEntry = this.resetPasswordRepo.create({
       userId: user.id,
       token,
