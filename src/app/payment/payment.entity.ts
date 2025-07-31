@@ -9,6 +9,8 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Student } from '../student/student.entity';
+import { Receipt } from '../receipts/receipt.entity';
+import { PaymentType } from './payment-type.entity';
 
 
 @Entity('payments')
@@ -19,7 +21,9 @@ export class Payment {
   @Column()
   studentId: string;
 
-  @ManyToOne(() => Student, (student) => student.payments, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Student, (student) => student.payments, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'studentId' })
   student: Student;
 
@@ -38,9 +42,18 @@ export class Payment {
   @Column({ nullable: true })
   year?: number;
 
-//   @OneToOne(() => Receipt, (receipt) => receipt.payment, { cascade: true, nullable: true })
-//   receipt?: Receipt;
+  @OneToOne(() => Receipt, (receipt) => receipt.payment, {
+    cascade: true,
+    nullable: true,
+  })
+  receipt?: Receipt;
 
   @CreateDateColumn()
   createdAt: Date;
+  @ManyToOne(() => PaymentType, (type) => type.payments)
+  @JoinColumn({ name: 'typeId' })
+  type: PaymentType;
+
+  @Column()
+  typeId: string;
 }

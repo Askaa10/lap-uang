@@ -9,6 +9,8 @@ import { PaymentModule } from './app/payment/payment.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReceiptsModule } from './app/receipts/receipts.module';
+import { ArrearModule } from './app/arrear/arrear.module';
+import { ExpenseModule } from './app/expense/expense.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { ReceiptsModule } from './app/receipts/receipts.module';
     StudentModule,
     PaymentModule,
     ReceiptsModule,
+    ArrearModule,
+    ExpenseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
