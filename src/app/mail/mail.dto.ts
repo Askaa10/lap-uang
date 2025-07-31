@@ -1,6 +1,6 @@
 export class MailForgotPasswordDTO {
     name: string;
     email: string;
-    otpToken: number;
+    otpToken: number | string;
     userId : string;
 }

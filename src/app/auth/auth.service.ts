@@ -1,4 +1,3 @@
-
 import {
   HttpException,
   HttpStatus,
@@ -6,101 +5,112 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-// Add the following import or define the type if it exists elsewhere
 import { LoginDTO, ResetPasswordDTO } from './auth.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../mail/mail.service';
-import { hash } from 'bcrypt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './user.entity';
+import { ResetPassword } from './resetPassword.entity';
+import { Role } from './auth.enum';
+
 
 @Injectable()
 export class AuthService extends BaseResponse {
   constructor(
-    private Ps: PrismaService,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
+
+    @InjectRepository(ResetPassword)
+    private resetPasswordRepo: Repository<ResetPassword>,
+
     private jwtService: JwtService,
     private ms: MailService,
   ) {
     super();
   }
 
-  generateJWT(payload: jwtPayload, expiresIn: string | number, token: string) {
+  generateJWT(payload: any, expiresIn: string | number, token: string) {
     return this.jwtService.sign(payload, {
       secret: token,
-      expiresIn: expiresIn,
+      expiresIn,
     });
   }
+
   async login(userLogin: LoginDTO) {
     try {
-      const user = await this.Ps.user.findUnique({
-        where: {
-          email: userLogin.email,
-        },
+      const user = await this.userRepo.findOne({
+        where: { email: userLogin.email },
       });
-      // if (!user) {
-      //   throw new NotFoundException('Email tidak ditemukan');
-      // }
+
+      if (!user) {
+        throw new NotFoundException('Email tidak ditemukan');
+      }
+
       const isPasswordValid = await bcrypt.compare(
         userLogin.password,
         user.password,
       );
-      if (isPasswordValid) {
-        const jwt_payload: jwtPayload = {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          role: user.role,
-        };
-        const refresh_token = this.generateJWT(
-          jwt_payload,
-          7 * 24 * 60 * 60, // 7 days
-          process.env.JWT_SECRET,
-        );
-        const access_token = this.generateJWT(
-          jwt_payload,
-          1 * 60 * 60, // 1 hour
-          process.env.JWT_SECRET,
-        );
 
-        await this.Ps.user.update({
-          where: { id: user.id },
-          data: { refresh_token: refresh_token }, // Update lastLogin field
-        });
-
-        return this._success({
-          auth: {
-            access_token: access_token,
-            refresh_token: refresh_token,
-            alg: 'HS256',
-            token_type: 'Bearer',
-            typ: 'JWT',
-            scope: ['Read', 'Write', 'Delete', 'Update'],
-          },
-          data: { ...user },
-          links: {
-            self: '/auth/login',
-          },
-        });
-      } else {
+      if (!isPasswordValid) {
         throw new UnauthorizedException('Password salah');
       }
+
+      const jwt_payload = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      };
+
+      const refresh_token = this.generateJWT(
+        jwt_payload,
+        7 * 24 * 60 * 60, // 7 days
+        process.env.JWT_SECRET,
+      );
+
+      const access_token = this.generateJWT(
+        jwt_payload,
+        1 * 60 * 60, // 1 hour
+        process.env.JWT_SECRET,
+      );
+
+      user.refresh_token = refresh_token;
+      await this.userRepo.save(user);
+
+      return this._success({
+        auth: {
+          access_token,
+          refresh_token,
+          alg: 'HS256',
+          token_type: 'Bearer',
+          typ: 'JWT',
+          scope: ['Read', 'Write', 'Delete', 'Update'],
+        },
+        data: { ...user },
+        links: {
+          self: '/auth/login',
+        },
+      });
     } catch (error) {
       console.log(error);
-      // throw new NotFoundException('User not found');
+      throw error;
     }
   }
 
   async register(userRegister: { email: string; password: string }) {
     const hashedPassword = await bcrypt.hash(userRegister.password, 10);
-    const user = await this.Ps.user.create({
-      data: {
-        email: userRegister.email,
-        password: hashedPassword,
-        username: userRegister.email.split('@')[0],
-      },
+
+    const user = this.userRepo.create({
+      email: userRegister.email,
+      password: hashedPassword,
+      username: userRegister.email.split('@')[0],
+      role: Role.ADMIN,
     });
-    return user;
+
+    return this.userRepo.save(user);
   }
 
   async changePassword(userChangePassword: {
@@ -108,37 +118,25 @@ export class AuthService extends BaseResponse {
     oldPassword: string;
     newPassword: string;
   }) {
-    // Cari user berdasarkan email
-    const user = await this.Ps.user.findUnique({
-      where: {
-        email: userChangePassword.email,
-      },
+    const user = await this.userRepo.findOne({
+      where: { email: userChangePassword.email },
     });
 
     if (!user) {
       throw new UnauthorizedException('Email tidak ditemukan');
     }
 
-    // Cek apakah oldPassword cocok dengan password di database
     const isPasswordValid = await bcrypt.compare(
       userChangePassword.oldPassword,
       user.password,
     );
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Password lama salah');
     }
 
-    // Hash password baru
-    const hashedNewPassword = await bcrypt.hash(
-      userChangePassword.newPassword,
-      10,
-    );
-
-    // Update password
-    await this.Ps.user.update({
-      where: { id: user.id },
-      data: { password: hashedNewPassword },
-    });
+    user.password = await bcrypt.hash(userChangePassword.newPassword, 10);
+    await this.userRepo.save(user);
 
     return {
       message: 'Password berhasil diubah',
@@ -151,25 +149,14 @@ export class AuthService extends BaseResponse {
   }
 
   async myProfile(id: string) {
-    const user = await this.Ps.user.findFirst({
-      where: {
-        id: id,
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-      },
+    return this.userRepo.findOne({
+      where: { id },
+      select: ['id', 'email', 'username'],
     });
-    return user;
   }
 
   async forgotPassword(email: string) {
-    const user = await this.Ps.user.findFirst({
-      where: {
-        email: email,
-      },
-    });
+    const user = await this.userRepo.findOne({ where: { email } });
 
     if (!user) {
       throw new HttpException(
@@ -177,7 +164,9 @@ export class AuthService extends BaseResponse {
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
-    const token = Math.floor(100000 + Math.random() * 900000); // membuat token
+
+    const token = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit
+
     await this.ms.sendForgotPassword({
       email: email,
       name: user.username,
@@ -185,12 +174,12 @@ export class AuthService extends BaseResponse {
       userId: user.id,
     });
 
-    await this.Ps.resetPassword.create({
-      data: {
-        userId: user.id,
-        token: `${token}`,
-      },
-    }); // menyimpan token dan id ke tabel reset password
+    const resetEntry = this.resetPasswordRepo.create({
+      userId: user.id,
+      token,
+    });
+
+    await this.resetPasswordRepo.save(resetEntry);
 
     return this._success({
       auth: null,
@@ -206,37 +195,22 @@ export class AuthService extends BaseResponse {
     token: string,
     payload: ResetPasswordDTO,
   ) {
-    const userToken = await this.Ps.resetPassword.findFirst({
-      //cek apakah user_id dan token yang sah pada tabel reset password
-      where: {
-        userId: userId,
-        token: token,
-      },
+    const userToken = await this.resetPasswordRepo.findOne({
+      where: { userId, token },
     });
 
     if (!userToken) {
       throw new HttpException(
         'Token tidak valid',
-        HttpStatus.UNPROCESSABLE_ENTITY, // jika tidak sah , berikan pesan token tidak valid
+        HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
 
-    payload.new_password = await hash(payload.new_password, 12); //hash password
-    await this.Ps.user.update({
-      // ubah password lama dengan password baru
-      data: {
-        password: payload.new_password,
-      },
-      where: {
-        id: userId,
-      },
-    });
-    await this.Ps.resetPassword.delete({
-      // hapus semua token pada tabel reset password yang mempunyai user_id yang dikirim, agar tidak bisa digunakan kembali
-      where: {
-        id: userId,
-      },
-    });
+    const newHashedPassword = await bcrypt.hash(payload.new_password, 12);
+
+    await this.userRepo.update({ id: userId }, { password: newHashedPassword });
+
+    await this.resetPasswordRepo.delete({ id: userToken.id });
 
     return this._success({
       auth: null,
@@ -247,4 +221,3 @@ export class AuthService extends BaseResponse {
     });
   }
 }
-
