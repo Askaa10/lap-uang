@@ -15,7 +15,8 @@ import { ExpenseModule } from './app/expense/expense.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // konfigurasi is global untuk semua module
+      isGlobal: true,
+      envFilePath: '.env', // konfigurasi is global untuk semua module
     }),
     TypeOrmModule.forRootAsync({
       useFactory: async () => {
