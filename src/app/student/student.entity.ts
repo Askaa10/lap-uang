@@ -47,7 +47,6 @@ export class Student {
   @OneToMany(() => Payment, (payment) => payment.student)
   payments: Payment[];
 
-
   @OneToMany(() => Arrear, (arrear) => arrear.student)
   arrears: Arrear[];
 }
