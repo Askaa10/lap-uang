@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReceiptsModule } from './app/receipts/receipts.module';
 import { ArrearModule } from './app/arrear/arrear.module';
 import { ExpenseModule } from './app/expense/expense.module';
+import { InitialBalanceModule } from './app/initial-balance/initial-balance.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ExpenseModule } from './app/expense/expense.module';
     ReceiptsModule,
     ArrearModule,
     ExpenseModule,
+    InitialBalanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
