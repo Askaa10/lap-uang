@@ -12,6 +12,6 @@ export class ExpenseCategory {
   @Column()
   budget: number;
 
-  @OneToMany(() => Expense, (expense) => expense.category)
-  expenses: Expense[];
+  // @OneToMany(() => Expense, (expense) => expense.category)
+  // expenses: Expense[];
 }
