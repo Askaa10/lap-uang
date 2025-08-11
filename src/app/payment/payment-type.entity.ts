@@ -10,8 +10,13 @@ export class PaymentType {
   @Column({ unique: true })
   name: string; // contoh: "SPP", "Haul", "Infak", dll
 
-  @Column({ default: false })
-  isMonthly: boolean; // true jika jenis ini dibayar per bulan
+
+
+  @Column({ default: 0 })
+  semester: number
+
+  @Column({ default : "" })
+  TA : string
 
   @OneToMany(() => Payment, (payment) => payment.type)
   payments: Payment[];

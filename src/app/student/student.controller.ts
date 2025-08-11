@@ -17,7 +17,7 @@ export class StudentController {
   }
 
   @Post('createStudent')
-  createSingleStudent(@Body() data: CreateStudentDto) {
+  async createSingleStudent(@Body() data: CreateStudentDto) {
     return this.studentService.createStudent(data);
   }
 

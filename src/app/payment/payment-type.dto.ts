@@ -1,13 +1,17 @@
-import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, isString, IsString, MinLength } from 'class-validator';
 
 export class CreatePaymentTypeDto {
   @IsString()
   @MinLength(2, { message: 'Name must be at least 2 characters' })
   name: string;
 
+ @IsInt()
+ @IsOptional()
+  semseter: number
+
+  @IsString()
   @IsOptional()
-  @IsBoolean({ message: 'isMonthly must be a boolean' })
-  isMonthly?: boolean;
+  TA: string;
 }
 
 export class UpdatePaymentTypeDto {
@@ -15,8 +19,12 @@ export class UpdatePaymentTypeDto {
   @IsString()
   @MinLength(2, { message: 'Name must be at least 2 characters' })
   name?: string;
-
+  
+  @IsInt()
   @IsOptional()
-  @IsBoolean({ message: 'isMonthly must be a boolean' })
-  isMonthly?: boolean;
+   semseter: number
+ 
+   @IsString()
+   @IsOptional()
+   TA: string;
 }

@@ -1,3 +1,4 @@
+import { IsNotEmpty, IsString } from "class-validator";
 import { Major } from "./student.enum";
 
 export class StudentDto {
@@ -8,11 +9,24 @@ export class StudentDto {
 }
 
 export class CreateStudentDto {
-  studentId: string;
+
+  @IsNotEmpty()
+  @IsString()
   name: string;
+
+  @IsNotEmpty()
+  @IsString()
   regisNumber: string;
+
+  @IsNotEmpty()
+  @IsString()
   dorm?: string;
+
+  @IsNotEmpty() 
   generation: number;
+
+  @IsNotEmpty()
+  @IsString()
   major: Major;
 }
 
