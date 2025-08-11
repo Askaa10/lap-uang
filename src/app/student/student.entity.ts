@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Payment } from '../payment/payment.entity';
-import { Major } from './student.enum';
+import { Major, StudentStatus } from './student.enum';
 import { Arrear } from '../arrear/arrear.entity';
 
 // Define or import the Major enum
@@ -17,8 +17,8 @@ export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  studentId: string;
+  // @Column({ unique: true })
+  // studentId: string;
 
   @Column()
   name: string;
@@ -31,6 +31,8 @@ export class Student {
 
   @Column()
   generation: number;
+  @Column({ type: 'enum', enum: StudentStatus, default: StudentStatus.ACTIVE })
+  status: StudentStatus;
 
   @Column({ type: 'enum', enum: Major })
   major: Major;
@@ -46,7 +48,6 @@ export class Student {
 
   @OneToMany(() => Payment, (payment) => payment.student)
   payments: Payment[];
-
 
   @OneToMany(() => Arrear, (arrear) => arrear.student)
   arrears: Arrear[];

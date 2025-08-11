@@ -7,7 +7,7 @@ import { CreateSchoolProfileDto, UpdateSchoolProfileDto } from './school-profile
 export class SchoolProfileController {
   constructor(private readonly service: SchoolProfileService) {}
 
-  @Post('tamabah')
+  @Post('tambah')
   create(@Body() dto: CreateSchoolProfileDto) {
     return this.service.create(dto);
   }

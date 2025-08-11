@@ -16,7 +16,8 @@ import { InitialBalanceModule } from './app/initial-balance/initial-balance.modu
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // konfigurasi is global untuk semua module
+      isGlobal: true,
+      envFilePath: '.env', // konfigurasi is global untuk semua module
     }),
     TypeOrmModule.forRootAsync({
       useFactory: async () => {

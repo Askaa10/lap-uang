@@ -16,6 +16,11 @@ export class StudentController {
     return this.studentService.createStudents(data);
   }
 
+  @Post('createStudent')
+  createSingleStudent(@Body() data: CreateStudentDto) {
+    return this.studentService.createStudent(data);
+  }
+
     @Post('updateStudent/:id')
   updateStudent(@Param('id') id: string, @Body() data: UpdateStudentDto) {
     return this.studentService.updateStudent(id, data);

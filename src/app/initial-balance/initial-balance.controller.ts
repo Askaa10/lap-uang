@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
 import { InitialBalanceService } from './initial-balance.service';
 import { CreateInitialBalanceDto } from './initial-balance.dto';
 
@@ -7,7 +7,7 @@ export class InitialBalanceController {
   constructor(private readonly initialBalanceService: InitialBalanceService) {}
 
   @Post('create')
-  async createInitialBalance(dto: CreateInitialBalanceDto) {
+  async createInitialBalance(@Body() dto: CreateInitialBalanceDto) {
     return this.initialBalanceService.create(dto);
   }
 

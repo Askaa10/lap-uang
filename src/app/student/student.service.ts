@@ -37,6 +37,12 @@ export class StudentService extends BaseResponse {
     return this._success({ data: createStudentDtos});
   }
 
+  async createStudent(createStudentDto: CreateStudentDto) {
+    const student = this.Sr.create(createStudentDto);
+    await this.Sr.save(student);
+    return this._success({ data: student });
+  }
+
   async updateStudent(id: string, updateData: Partial<CreateStudentDto> | any) {
     await this.Sr.update(id, updateData);
     const updatedStudent = await this.Sr.findOne({ where: { id } });

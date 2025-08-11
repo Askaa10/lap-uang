@@ -9,7 +9,7 @@ export class Expense {
   @Column()
   categoryId: string;
 
-  @ManyToOne(() => ExpenseCategory, (category) => category.expenses)
+  @ManyToOne(() => ExpenseCategory, (category) => category.expenses, {onDelete: 'CASCADE'})
   category: ExpenseCategory;
 
   @Column({ type: 'timestamp' })

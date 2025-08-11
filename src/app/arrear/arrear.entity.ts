@@ -9,7 +9,6 @@ import {
 import { Student } from '../student/student.entity';
 import { PaymentType } from '../payment/payment-type.entity';
 
-
 @Entity()
 export class Arrear {
   @PrimaryGeneratedColumn('uuid')
@@ -25,7 +24,7 @@ export class Arrear {
   studentId: string;
 
   @ManyToOne(() => PaymentType, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'typeId' })
   type: PaymentType;
