@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CreateExpenseDto } from './expense.dto';
 import { ExpenseService } from './expense.service';
 import { CreateExpenseCategoryDto } from './create-expense-category.dto';
-import { ExpenseCategory } from './expense.category.entity';
+import { ExpenseCategory } from './expense-category.entity';
 
 @Controller('expense')
 export class ExpenseController {
@@ -21,17 +21,5 @@ export class ExpenseController {
   @Post('updateExpense/:id')
   async updateExpense(@Param('id') id: string, @Body() updateData: any) {
     return this.expenseService.updateExpense(id, updateData);
-  }
-
-  @Post('categoryCreate')
-  async create(
-    @Body() createDto: CreateExpenseCategoryDto,
-  ): Promise<ExpenseCategory> {
-    return this.expenseService.createKategori(createDto);
-  }
-
-  @Get('getCategory')
-  async findAll() {
-    return this.expenseService.findAll();
   }
 }

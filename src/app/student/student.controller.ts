@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { StudentService } from './student.service';
 import { CreateStudentDto, UpdateStudentDto } from './student.dto';
 
@@ -6,7 +14,7 @@ import { CreateStudentDto, UpdateStudentDto } from './student.dto';
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
-  @Get('getAllStudent')
+  @Get('')
   async getAllStudents() {
     return this.studentService.getAll();
   }
@@ -16,18 +24,23 @@ export class StudentController {
     return this.studentService.createStudents(data);
   }
 
-  @Post('createStudent')
+  @Post('create')
   async createSingleStudent(@Body() data: CreateStudentDto) {
     return this.studentService.createStudent(data);
   }
 
-    @Put('updateStudent/:id')
+  @Put('update/:id')
   updateStudent(@Param('id') id: string, @Body() data: UpdateStudentDto) {
     return this.studentService.updateStudent(id, data);
   }
 
-  @Delete('deleteStudent/:id')
+  @Delete('delete/:id')
   deleteStudent(@Param('id') id: string) {
     return this.studentService.deleteStudent(id);
+  }
+
+  @Get("detail/:id")
+  detailStudent(@Param('id') id: string, ) {
+
   }
 }

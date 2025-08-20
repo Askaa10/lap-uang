@@ -7,7 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Student } from '../student/student.entity';
-import { PaymentType } from '../payment/payment-type.entity';
+import { PaymentType } from '../payment/payment-type/payment-type.entity';
 
 @Entity()
 export class Arrear {

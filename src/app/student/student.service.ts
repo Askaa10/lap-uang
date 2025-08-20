@@ -1,6 +1,6 @@
 // src/app/student/student.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { BaseResponse } from 'src/utils/response/base.response';
 import { CreateStudentDto } from './student.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,25 +22,39 @@ export class StudentService extends BaseResponse {
   }
 
   async createStudents(createStudentDtos: CreateStudentDto[]) {
-    if(createStudentDtos.length === 0) {
-      return ;
-    } else if(createStudentDtos.length > 1) {
-      for (let i in createStudentDtos) {
-        const createStudentDto =  await createStudentDtos[i];
+    try {
+      if (createStudentDtos.length === 0) {
+        throw new HttpException(`No student data provided`, 400);
+
+      } else if (createStudentDtos.length > 1) {
+        for (let i in createStudentDtos) {
+          const createStudentDto = await createStudentDtos[i];
+          await this.Sr.save(createStudentDto);
+        }
+      } else if (createStudentDtos.length === 1) {
+        const createStudentDto = await createStudentDtos[0];
         await this.Sr.save(createStudentDto);
       }
-    } else if(createStudentDtos.length === 1) {
-      const createStudentDto =  await createStudentDtos[0];
-      await this.Sr.save(createStudentDto);
-    }
-
-    return this._success({ data: createStudentDtos});
+      return this._success({
+        data: createStudentDtos,
+        links: {
+          self: '/student/createBulk',
+        },
+      });
+    } catch (err) {
+      if (err) {
+        throw new HttpException(`Error creating students: ${err.message}`, 500);
+      }
+  }
   }
 
   async createStudent(createStudentDto: CreateStudentDto) {
     const student = this.Sr.create(createStudentDto);
     await this.Sr.save(student);
-    return this._success({ data: student });
+    return this._success({
+      data: student, links: {
+      self: `/student/create`
+    } });
   }
 
   async updateStudent(id: string, updateData: Partial<CreateStudentDto> | any) {
@@ -52,5 +66,10 @@ export class StudentService extends BaseResponse {
   async deleteStudent(id: string) {
     const deleted = await this.Sr.delete(id);
     return this._success({ data: deleted });
+  }
+
+  async detailStudent(id: string) {
+    const student = await this.Sr.findOne({ where: { id } });
+    return this._success({ data: student });
   }
 }

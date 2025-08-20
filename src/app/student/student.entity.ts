@@ -17,28 +17,23 @@ export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // @Column({ unique: true })
-  // studentId: string;
-
   @Column()
   name: string;
 
   @Column()
-  regisNumber: string;
+  InductNumber: string;
 
   @Column({ nullable: true })
-  dorm?: string;
+  dorm: string;
 
   @Column()
   generation: number;
+  
   @Column({ type: 'enum', enum: StudentStatus, default: StudentStatus.ACTIVE })
   status: StudentStatus;
 
   @Column({ type: 'enum', enum: Major })
   major: Major;
-
-  @Column({ default: 0 })
-  sppTariff: number;
 
   @CreateDateColumn()
   createdAt: Date;

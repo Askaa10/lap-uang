@@ -4,7 +4,7 @@ import { Expense } from './expense.entity';
 import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/utils/response/base.response';
 import { CreateExpenseDto } from './expense.dto';
-import { ExpenseCategory } from './expense.category.entity';
+import { ExpenseCategory } from './expense-category.entity';
 import { CreateExpenseCategoryDto } from './create-expense-category.dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -45,13 +45,8 @@ export class ExpenseService extends BaseResponse {
     const category = plainToInstance(ExpenseCategory, createDto);
     return this.expenseRepo.save(category);
   }
-  async createKategori(createDto: CreateExpenseCategoryDto): Promise<ExpenseCategory> {
-    const category = plainToInstance(ExpenseCategory, createDto);
-    return this.expenseCategoryRepo.save(category);
-  }
 
   async findAll() {
     return this.expenseRepo.find();
-    
   }
 }

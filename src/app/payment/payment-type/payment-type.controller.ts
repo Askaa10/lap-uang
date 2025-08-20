@@ -11,7 +11,7 @@ export class PaymentTypeController {
     return this.service.create(dto);
   }
 
-  @Get('all')
+  @Get('')
   findAll() {
     return this.service.findAll();
   }
