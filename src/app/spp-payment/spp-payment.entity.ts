@@ -1,0 +1,51 @@
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Student } from '../student/student.entity';
+
+@Entity('spp_payments')
+export class SppPayment {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => Student, (student) => student.spp, {
+    onDelete: 'CASCADE',
+  })
+  student: Student;
+
+  @Column({
+    type: 'enum',
+    enum: [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ],
+  })
+  month: string;
+
+  @Column()
+  year: number;
+
+    @Column('int')
+    nominal: number;
+
+  @Column({
+    type: 'enum',
+    enum: ['LUNAS', 'BELUM_LUNAS'],
+    default: 'BELUM_LUNAS',
+  })
+  status: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  paidAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+}
