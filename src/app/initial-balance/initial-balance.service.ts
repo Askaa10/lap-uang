@@ -15,81 +15,107 @@ export class InitialBalanceService extends BaseResponse {
   }
 
   async create(dto: CreateInitialBalanceDto) {
-    const initialBalance = this.Ibr.create({
-      description: dto.description,
-      amount: dto.amount,
-      year: dto.year,
-    });
+  const initialBalance = this.Ibr.create({
+    description: dto.description,
+    amount: dto.amount,
+    year: dto.year,
+  });
 
-    const created = await this.Ibr.save(initialBalance);
+  const created = await this.Ibr.save(initialBalance);
 
-    return {
-      message: 'Initial balance created successfully',
-      data: created,
-    };
-  }
+  return this._success({
+    message: {
+      en: 'Initial balance created successfully',
+      id: 'Saldo awal berhasil dibuat',
+    },
+    data: created,
+  });
+}
 
-  async findAll() {
-    const initialBalances = await this.Ibr.find();
+async findAll() {
+  const initialBalances = await this.Ibr.find();
 
-    return {
-      message: 'List of initial balances',
+  return this._success({
+    message: {
+      en: 'List of initial balances',
+      id: 'Daftar saldo awal',
+    },
+    data: {
       total: initialBalances.length,
       data: initialBalances,
-    };
-  }
+    },
+  });
+}
 
-  async findOne(id: string) {
-    const initialBalance = await this.Ibr.findOne({ where: { id } });
+async findOne(id: string) {
+  const initialBalance = await this.Ibr.findOne({ where: { id } });
 
-    if (!initialBalance) {
-      return {
-        message: 'Initial balance not found',
-        data: null,
-      };
-    }
-
-    return {
-      message: 'Initial balance retrieved successfully',
-      data: initialBalance,
-    };
-  }
-
-  async delete(id: string) {
-    const initialBalance = await this.Ibr.findOne({ where: { id } });
-    if (!initialBalance) {
-      return {
-        message: 'Initial balance not found',
-        data: null,
-      };
-    }
-
-    await this.Ibr.remove(initialBalance);
-
-    return {
-      message: 'Initial balance deleted successfully',
-      data: initialBalance,
-    };
-  }
-
-  async update(id: string, updateData: Partial<CreateInitialBalanceDto> | any) {
-    const initialBalance = await this.Ibr.findOne({ where: { id } });
-
-    if (!initialBalance) {
-      return {
-        message: 'Initial balance not found',
-        data: null,
-      };
-    }
-
-    const updated = await this.Ibr.save({
-      ...initialBalance,
-      ...updateData,
+  if (!initialBalance) {
+    return this._success({
+      message: {
+        en: 'Initial balance not found',
+        id: 'Saldo awal tidak ditemukan',
+      },
+      data: null,
     });
-
-    return {
-      message: 'Initial balance updated successfully',
-      data: updated,
-    };
   }
+
+  return this._success({
+    message: {
+      en: 'Initial balance retrieved successfully',
+      id: 'Saldo awal berhasil diambil',
+    },
+    data: initialBalance,
+  });
+}
+
+async delete(id: string) {
+  const initialBalance = await this.Ibr.findOne({ where: { id } });
+  if (!initialBalance) {
+    return this._success({
+      message: {
+        en: 'Initial balance not found',
+        id: 'Saldo awal tidak ditemukan',
+      },
+      data: null,
+    });
+  }
+
+  await this.Ibr.remove(initialBalance);
+
+  return this._success({
+    message: {
+      en: 'Initial balance deleted successfully',
+      id: 'Saldo awal berhasil dihapus',
+    },
+    data: initialBalance,
+  });
+}
+
+async update(id: string, updateData: Partial<CreateInitialBalanceDto> | any) {
+  const initialBalance = await this.Ibr.findOne({ where: { id } });
+
+  if (!initialBalance) {
+    return this._success({
+      message: {
+        en: 'Initial balance not found',
+        id: 'Saldo awal tidak ditemukan',
+      },
+      data: null,
+    });
+  }
+
+  const updated = await this.Ibr.save({
+    ...initialBalance,
+    ...updateData,
+  });
+
+  return this._success({
+    message: {
+      en: 'Initial balance updated successfully',
+      id: 'Saldo awal berhasil diperbarui',
+    },
+    data: updated,
+  });
+}
 }

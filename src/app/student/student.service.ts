@@ -23,7 +23,7 @@ export class StudentService extends BaseResponse {
 
   async createStudents(createStudentDtos: CreateStudentDto[]) {
     if(createStudentDtos.length === 0) {
-      return ;
+      return this._success({ data: [] });
     } else if(createStudentDtos.length > 1) {
       for (let i in createStudentDtos) {
         const createStudentDto =  await createStudentDtos[i];
@@ -54,3 +54,4 @@ export class StudentService extends BaseResponse {
     return this._success({ data: deleted });
   }
 }
+
