@@ -11,6 +11,13 @@ export class SchoolProfileService {
     private readonly schoolProfileRepo: Repository<SchoolProfile>,
   ) {}
 
+  private _success<T>(message: string, data: T) {
+    return {
+      message,
+      data,
+    };
+  }
+
   async create(dto: CreateSchoolProfileDto) {
     const profile = this.schoolProfileRepo.create({
       name: dto.name,
@@ -23,36 +30,23 @@ export class SchoolProfileService {
 
     const created = await this.schoolProfileRepo.save(profile);
 
-    return {
-      message: 'School profile created successfully',
-      data: created,
-    };
+    return this._success('School profile created successfully', created);
   }
 
   async findAll() {
     const profiles = await this.schoolProfileRepo.find();
 
-    return {
-      message: 'List of school profiles',
-      total: profiles.length,
-      data: profiles,
-    };
+    return this._success('List of school profiles', profiles);
   }
 
   async findOne(id: string) {
     const profile = await this.schoolProfileRepo.findOne({ where: { id } });
 
     if (!profile) {
-      return {
-        message: 'School profile not found',
-        data: null,
-      };
+      return this._success('School profile not found', null);
     }
 
-    return {
-      message: 'School profile retrieved successfully',
-      data: profile,
-    };
+    return this._success('School profile retrieved successfully', profile);
   }
 
   async update(id: string, dto: UpdateSchoolProfileDto) {
@@ -67,10 +61,7 @@ export class SchoolProfileService {
 
     const updated = await this.schoolProfileRepo.save(profile);
 
-    return {
-      message: 'School profile updated successfully',
-      data: updated,
-    };
+    return this._success('School profile updated successfully', updated);
   }
 
   async remove(id: string) {
@@ -82,10 +73,7 @@ export class SchoolProfileService {
 
     await this.schoolProfileRepo.remove(profile);
 
-    return {
-      message: 'School profile deleted successfully',
-      data: profile,
-    };
+    return this._success('School profile deleted successfully', profile);
   }
 
   async myProfile(id: string) {
@@ -103,15 +91,9 @@ export class SchoolProfileService {
     });
 
     if (!profile) {
-      return {
-        message: 'Profile not found',
-        data: null,
-      };
+      return this._success('Profile not found', null);
     }
 
-    return {
-      message: 'My school profile fetched successfully',
-      data: profile,
-    };
+    return this._success('My school profile fetched successfully', profile);
   }
 }

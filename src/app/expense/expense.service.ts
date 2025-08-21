@@ -41,12 +41,20 @@ export class ExpenseService extends BaseResponse {
     return this._success({ data: deleted });
   }
 
-  async create(createDto: CreateExpenseCategoryDto): Promise<ExpenseCategory> {
+  async create(createDto: CreateExpenseCategoryDto): Promise<any> {
     const category = plainToInstance(ExpenseCategory, createDto);
-    return this.expenseRepo.save(category);
+    const savedCategory = await this.expenseRepo.save(category);
+    return this._success({ data: savedCategory });
+  }
+
+  async createKategori(createDto: CreateExpenseCategoryDto): Promise<any> {
+    const category = plainToInstance(ExpenseCategory, createDto);
+    const savedCategory = await this.expenseCategoryRepo.save(category);
+    return this._success({ data: savedCategory });
   }
 
   async findAll() {
-    return this.expenseRepo.find();
+    const categories = await this.expenseRepo.find();
+    return this._success({ data: categories });
   }
 }

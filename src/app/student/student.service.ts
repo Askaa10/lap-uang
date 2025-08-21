@@ -22,17 +22,11 @@ export class StudentService extends BaseResponse {
   }
 
   async createStudents(createStudentDtos: CreateStudentDto[]) {
-    try {
-      if (createStudentDtos.length === 0) {
-        throw new HttpException(`No student data provided`, 400);
-
-      } else if (createStudentDtos.length > 1) {
-        for (let i in createStudentDtos) {
-          const createStudentDto = await createStudentDtos[i];
-          await this.Sr.save(createStudentDto);
-        }
-      } else if (createStudentDtos.length === 1) {
-        const createStudentDto = await createStudentDtos[0];
+    if(createStudentDtos.length === 0) {
+      return this._success({ data: [] });
+    } else if(createStudentDtos.length > 1) {
+      for (let i in createStudentDtos) {
+        const createStudentDto =  await createStudentDtos[i];
         await this.Sr.save(createStudentDto);
       }
       return this._success({
@@ -73,3 +67,4 @@ export class StudentService extends BaseResponse {
     return this._success({ data: student });
   }
 }
+
