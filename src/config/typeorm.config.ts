@@ -9,4 +9,10 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   entities: [__dirname + '/../**/*.entity.{ts,js}'],
   synchronize: true,
   logging: true,
+  extra: {
+    connectionLimit: 10, // batas koneksi di pool
+    waitForConnections: true, // kalau pool penuh, tunggu bukan error
+    enableKeepAlive: true, // aktifkan TCP keepalive
+    keepAliveInitialDelay: 10000, // delay keepalive (ms)
+  },
 };

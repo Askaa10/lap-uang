@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentType } from './payment-type.entity';
 import { CreatePaymentTypeDto, UpdatePaymentTypeDto } from './payment-type.dto';
-import { BaseResponse } from 'src/utils/response/base.response';
+import { BaseResponse } from '../../../utils/response/base.response';
 
 @Injectable()
 export class PaymentTypeService extends BaseResponse {

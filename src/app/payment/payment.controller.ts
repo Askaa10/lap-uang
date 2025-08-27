@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
-import { PaymentTypeService } from './payment-type.service';
+import { PaymentTypeService } from './payment-type/payment-type.service';
 @Controller('payments')
 export class PaymentController {
   constructor(
@@ -41,5 +41,4 @@ export class PaymentController {
   remove(@Param('id') id: string) {
     return this.paymentService.remove(id);
   }
-
 }

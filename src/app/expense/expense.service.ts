@@ -2,14 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expense } from './expense.entity';
 import { Repository } from 'typeorm';
-import { BaseResponse } from 'src/utils/response/base.response';
+import { BaseResponse } from '../../utils/response/base.response';
 import { CreateExpenseDto } from './expense.dto';
+import { ExpenseCategory } from './expense-category.entity';
+import { CreateExpenseCategoryDto } from './create-expense-category.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ExpenseService extends BaseResponse {
   constructor(
     @InjectRepository(Expense)
     private readonly expenseRepo: Repository<Expense>,
+    @InjectRepository(ExpenseCategory)
+    private readonly expenseCategoryRepo: Repository<ExpenseCategory>,
   ) {
     super();
   }
@@ -19,7 +24,6 @@ export class ExpenseService extends BaseResponse {
     const saved = await this.expenseRepo.save(expenses);
     return this._success({ data: saved });
   }
-
 
   async getAll() {
     const expenses = await this.expenseRepo.find();
@@ -35,5 +39,22 @@ export class ExpenseService extends BaseResponse {
   async deleteExpense(id: string) {
     const deleted = await this.expenseRepo.delete(id);
     return this._success({ data: deleted });
+  }
+
+  async create(createDto: CreateExpenseCategoryDto): Promise<any> {
+    const category = plainToInstance(ExpenseCategory, createDto);
+    const savedCategory = await this.expenseRepo.save(category);
+    return this._success({ data: savedCategory });
+  }
+
+  async createKategori(createDto: CreateExpenseCategoryDto): Promise<any> {
+    const category = plainToInstance(ExpenseCategory, createDto);
+    const savedCategory = await this.expenseCategoryRepo.save(category);
+    return this._success({ data: savedCategory });
+  }
+
+  async findAll() {
+    const categories = await this.expenseRepo.find();
+    return this._success({ data: categories });
   }
 }

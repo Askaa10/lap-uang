@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Payment } from './payment.entity';
-import { Arrear } from '../arrear/arrear.entity';
+import { Payment } from '../payment.entity';
+import { Arrear } from '../../arrear/arrear.entity';
+import { CategoryTypes } from './payment-type.enum';
 
 @Entity()
 export class PaymentType {
@@ -8,15 +9,19 @@ export class PaymentType {
   id: string;
 
   @Column({ unique: true })
-  name: string; // contoh: "SPP", "Haul", "Infak", dll
-
-
+  name: string;
 
   @Column({ default: 0 })
-  semester: number
+  semester: number;
 
-  @Column({ default : "" })
-  TA : string
+  @Column()
+  nominal: number;
+  
+  @Column({ default: '' })
+  TA: string;
+
+  @Column({ default: 'NORMAL' })
+  type: CategoryTypes;
 
   @OneToMany(() => Payment, (payment) => payment.type)
   payments: Payment[];

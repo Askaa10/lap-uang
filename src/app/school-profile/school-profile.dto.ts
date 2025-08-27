@@ -6,6 +6,14 @@ export class CreateSchoolProfileDto {
   
     @IsString()
     foundation: string; // <-- tambahkan ini
+
+    @IsOptional()
+    @IsString()
+    Nip?: string;
+  
+    @IsOptional()
+    @IsString()
+    Email?: string;
   
     @IsOptional()
     @IsString()

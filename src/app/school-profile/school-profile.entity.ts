@@ -13,6 +13,12 @@ import {
   
     @Column()
     name: string; // Nama sekolah
+
+    @Column()
+    Nip : string; // Nomor Induk Pegawai
+
+    @Column({ unique: true })
+    Email : string;
   
     @Column()
     foundation: string;

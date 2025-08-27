@@ -11,7 +11,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDTO, ResetPasswordDTO } from './auth.dto';
 import { JwtGuard } from './auth.guard';
-import { Roles } from 'src/decorators/roles.decorator';
+import { Roles } from '../../decorators/roles.decorator';
 import { RolesGuard } from './roles.guard';
 @Controller('auth')
 export class AuthController {

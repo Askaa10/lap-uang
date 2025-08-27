@@ -1,4 +1,3 @@
-
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -10,8 +9,7 @@ import {
 } from 'typeorm';
 import { Student } from '../student/student.entity';
 import { Receipt } from '../receipts/receipt.entity';
-import { PaymentType } from './payment-type.entity';
-
+import { PaymentType } from './payment-type/payment-type.entity';
 
 @Entity('payments')
 export class Payment {

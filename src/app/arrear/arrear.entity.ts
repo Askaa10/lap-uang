@@ -7,9 +7,9 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Student } from '../student/student.entity';
-import { PaymentType } from '../payment/payment-type.entity';
+import { PaymentType } from '../payment/payment-type/payment-type.entity';
 
-@Entity('Arrear')
+@Entity()
 export class Arrear {
   @PrimaryGeneratedColumn('uuid')
   id: string;

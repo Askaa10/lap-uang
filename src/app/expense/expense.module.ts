@@ -4,9 +4,10 @@ import { ExpenseController } from './expense.controller';
 import { typeOrmConfig } from 'src/config/typeorm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Expense } from './expense.entity';
+import { ExpenseCategory } from './expense-category.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Expense])],
+  imports: [TypeOrmModule.forFeature([Expense, ExpenseCategory])],
   providers: [ExpenseService],
   controllers: [ExpenseController],
   exports: [ExpenseService], // jika dipakai di module lain

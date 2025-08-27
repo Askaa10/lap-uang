@@ -3,16 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Payment } from './payment.entity';
 
-import { PaymentType } from './payment-type.entity';
+import { PaymentType } from './payment-type/payment-type.entity';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
-
 
 @Injectable()
 export class PaymentService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
-    
+
     @InjectRepository(PaymentType)
     private readonly paymentTypeRepo: Repository<PaymentType>,
   ) {}
@@ -36,7 +35,10 @@ export class PaymentService {
   }
 
   async findOne(id: string) {
-    const payment = await this.paymentRepo.findOne({ where: { id }, relations: ['student'] });
+    const payment = await this.paymentRepo.findOne({
+      where: { id },
+      relations: ['student'],
+    });
 
     if (!payment) {
       throw new NotFoundException('Payment not found');

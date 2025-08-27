@@ -9,6 +9,7 @@ import {
 import { Payment } from '../payment/payment.entity';
 import { Major, StudentStatus } from './student.enum';
 import { Arrear } from '../arrear/arrear.entity';
+import { SppPayment } from '../spp-payment/spp-payment.entity';
 
 // Define or import the Major enum
 
@@ -17,28 +18,23 @@ export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // @Column({ unique: true })
-  // studentId: string;
-
   @Column()
   name: string;
 
   @Column()
-  regisNumber: string;
+  InductNumber: string;
 
   @Column({ nullable: true })
-  dorm?: string;
+  dorm: string;
 
   @Column()
   generation: number;
+  
   @Column({ type: 'enum', enum: StudentStatus, default: StudentStatus.ACTIVE })
   status: StudentStatus;
 
   @Column({ type: 'enum', enum: Major })
   major: Major;
-
-  @Column({ default: 0 })
-  sppTariff: number;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -51,4 +47,8 @@ export class Student {
 
   @OneToMany(() => Arrear, (arrear) => arrear.student)
   arrears: Arrear[];
+
+  @OneToMany(() => SppPayment, (spp) => spp.student)
+  spp: SppPayment[];
+
 }
