@@ -34,6 +34,14 @@ export class PaymentService {
     };
   }
 
+  async rekap() {
+    const payments = await this.paymentRepo.find({ relations: ['student'] });
+    return {
+      message: 'List of all payments',
+      total: payments.length,
+      data: payments,
+    };
+  }
   async findOne(id: string) {
     const payment = await this.paymentRepo.findOne({
       where: { id },
@@ -64,6 +72,43 @@ export class PaymentService {
     };
   }
 
+  async rekapBulanan() {
+    // Ambil semua PaymentType
+    const paymentTypes = await this.paymentTypeRepo.find({ order: { name: 'ASC' } });
+  
+    // Ambil semua Payment beserta student & type
+    const payments = await this.paymentRepo.find({
+      relations: ['student', 'type'],
+      order: { student: { name: 'ASC' } },
+    });
+  
+    const grouped: Record<string, any> = {};
+  
+    for (const payment of payments) {
+      const studentName = payment.student.name;
+  
+      if (!grouped[studentName]) {
+        grouped[studentName] = { nama: studentName };
+        for (const pt of paymentTypes) {
+          grouped[studentName][pt.name] = 'BELUM';
+        }
+      }
+  
+      if (payment.type) {
+        grouped[studentName][payment.type.name] = 'LUNAS';
+      }
+    }
+  
+    return {
+      success: true,
+      message: { en: 'Success', id: 'Berhasil' },
+      code: 200,
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      locale: 'id',
+      data: Object.values(grouped),
+    };
+  }
   async remove(id: string) {
     const payment = await this.paymentRepo.findOne({ where: { id } });
 

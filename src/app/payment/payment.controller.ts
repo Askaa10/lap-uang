@@ -27,6 +27,11 @@ export class PaymentController {
     return this.paymentService.findAll();
   }
 
+  @Get('rekap')
+  rekap() {
+    return this.paymentService.rekapBulanan()
+  }
+
   @Get('detail/:id')
   findOne(@Param('id') id: string) {
     return this.paymentService.findOne(id);
