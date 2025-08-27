@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Student } from '../student/student.entity';
 
 @Entity('spp_payments')
@@ -6,10 +6,16 @@ export class SppPayment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+ 
+
   @ManyToOne(() => Student, (student) => student.spp, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'studentId' })
   student: Student;
+
+  @Column()
+  studentId: string;
 
   @Column({
     type: 'enum',
@@ -33,8 +39,8 @@ export class SppPayment {
   @Column()
   year: number;
 
-    @Column('int')
-    nominal: number;
+  @Column('int')
+  nominal: number;
 
   @Column({
     type: 'enum',

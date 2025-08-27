@@ -1,7 +1,7 @@
 // src/app/student/student.service.ts
 
 import { HttpException, Injectable } from '@nestjs/common';
-import { BaseResponse } from 'src/utils/response/base.response';
+import { BaseResponse } from '../../utils/response/base.response';
 import { CreateStudentDto } from './student.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

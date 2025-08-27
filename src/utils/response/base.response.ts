@@ -25,6 +25,7 @@ export class BaseResponse {
       locale: 'id',
       data,
       included,
+      total_data: Array.isArray(data) ? data.length : 1,
       meta: {
         request_id: traceId,
         trace_id: traceId,

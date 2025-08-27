@@ -3,16 +3,72 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SppPayment } from './spp-payment.entity';
-import { BaseResponse } from 'src/utils/response/base.response';
+import { BaseResponse } from '../../utils/response/base.response';
 import { CreateSppPaymentDto, UpdateSppPaymentDto } from './spp-payment.dto';
+import { Student } from '../student/student.entity';
 
 @Injectable()
 export class SppPaymentService extends BaseResponse {
   constructor(
     @InjectRepository(SppPayment)
     private readonly sppPaymentRepository: Repository<SppPayment>,
+    @InjectRepository(Student)
+    private studentRepo: Repository<Student>,
   ) {
     super();
+  }
+
+  async getSppRekap(year: number) {
+    // Ambil semua siswa
+    const students = await this.studentRepo.find();
+
+    // Ambil semua pembayaran SPP tahun tertentu
+    const payments = await this.sppPaymentRepository.find({
+      where: { year },
+      relations: ['student'],
+    });
+
+    // Bulan dalam bahasa Indonesia
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    // Mapping ke bentuk tabel per siswa
+    const result = students.map((student) => {
+      // filter pembayaran per siswa
+      const studentPayments = payments.filter(
+        (p) => p.studentId === student.id,
+      );
+
+      // buat object { Januari: status, Februari: status, ... }
+      const monthData = {};
+      for (const m of months) {
+        const payment = studentPayments.find((p) => p.month === m);
+        monthData[m.toLowerCase()] = payment ? payment.status : 'BELUM_BAYAR';
+      }
+
+      return {
+        nama: student.name, // asumsikan entity Student ada kolom `name`
+        ...monthData,
+      };
+    });
+
+    return this._success({
+      data: result,
+      included: ["student", "spp-payment"],
+      
+    });
   }
 
   async create(dto: CreateSppPaymentDto) {
@@ -22,8 +78,10 @@ export class SppPaymentService extends BaseResponse {
   }
 
   async findAll() {
-    const payments = await this.sppPaymentRepository.find();
-    return this._success({ data: payments });
+    const payments = await this.sppPaymentRepository.find({
+      relations: ["student"],
+    });
+    return this._success({ data: payments, included: ["student"] });
   }
 
   async findOne(id: string) {

@@ -28,10 +28,9 @@ export class User {
   @Column({ type: 'enum', enum: Role, default: Role.ADMIN })
   role: Role;
 
-  @Column({ nullable: true })
-  name?: string;
 
-  @Column({ nullable: true })
+
+  @Column({ nullable: true, type:'varchar', length: 1024 })
   refresh_token?: string;
 
   @CreateDateColumn()

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { LoginDTO, ResetPasswordDTO } from './auth.dto';
-import { BaseResponse } from 'src/utils/response/base.response';
+import { BaseResponse } from '../../utils/response/base.response';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -78,7 +78,7 @@ export class AuthService extends BaseResponse {
       );
 
       user.refresh_token = refresh_token;
-      await this.userRepo.save(user);
+      await this.userRepo.update(user.id, { refresh_token });
 
       return this._success({
         auth: {

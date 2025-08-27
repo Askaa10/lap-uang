@@ -14,10 +14,13 @@ export class PaymentType {
   @Column({ default: 0 })
   semester: number;
 
+  @Column()
+  nominal: number;
+  
   @Column({ default: '' })
   TA: string;
 
-  @Column({ default: "NORMAL" })
+  @Column({ default: 'NORMAL' })
   type: CategoryTypes;
 
   @OneToMany(() => Payment, (payment) => payment.type)

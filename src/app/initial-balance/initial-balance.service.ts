@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BaseResponse } from 'src/utils/response/base.response';
+import { BaseResponse } from '../../utils/response/base.response';
 import { InitialBalance } from './initial-balance.entity';
 import { Repository } from 'typeorm';
 import { CreateInitialBalanceDto } from './initial-balance.dto';

@@ -19,6 +19,11 @@ export class SppPaymentController {
     return this.sppPaymentService.create(createDto);
   }
 
+  @Get('rekap/:year')
+  async getRekap(@Param('year') year: number) {
+    return this.sppPaymentService.getSppRekap(year);
+  }
+
   @Get()
   findAll() {
     return this.sppPaymentService.findAll();

@@ -17,6 +17,10 @@ export class CreatePaymentTypeDto {
   @IsInt()
   @IsOptional()
   semester: number;
+  
+  @IsInt()
+  @IsOptional()
+  nominal: number;
 
   @IsString()
   @IsOptional()
@@ -36,6 +40,10 @@ export class UpdatePaymentTypeDto {
   @IsInt()
   @IsOptional()
   semester?: number;
+
+  @IsInt()
+  @IsOptional()
+  nominal: number;
 
   @IsString()
   @IsOptional()
