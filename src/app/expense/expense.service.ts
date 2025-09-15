@@ -4,17 +4,16 @@ import { Expense } from './expense.entity';
 import { Repository } from 'typeorm';
 import { BaseResponse } from 'src/utils/response/base.response';
 import { CreateExpenseDto } from './expense.dto';
-import { ExpenseCategory } from './expense.category.entity';
-import { CreateExpenseCategoryDto } from './create-expense-category.dto';
 import { plainToInstance } from 'class-transformer';
+import { CategoryExpense } from './category/category-expense.entity';
 
 @Injectable()
 export class ExpenseService extends BaseResponse {
   constructor(
     @InjectRepository(Expense)
     private readonly expenseRepo: Repository<Expense>,
-    @InjectRepository(ExpenseCategory)
-    private readonly expenseCategoryRepo: Repository<ExpenseCategory>,
+    @InjectRepository(CategoryExpense)
+    private readonly expenseCategoryRepo: Repository<CategoryExpense>,
   ) {
     super();
   }
@@ -41,20 +40,18 @@ export class ExpenseService extends BaseResponse {
     return this._success({ data: deleted });
   }
 
-  async create(createDto: CreateExpenseCategoryDto): Promise<any> {
-    const category = plainToInstance(ExpenseCategory, createDto);
-    const savedCategory = await this.expenseRepo.save(category);
-    return this._success({ data: savedCategory });
+  async createExpense(createDto : CreateExpenseDto) {
+    const data = await this.expenseRepo.create(
+      createDto
+    );
+    const saved = await this.expenseRepo.save(data);
+    return this._success({ data: saved });
   }
 
-  async createKategori(createDto: CreateExpenseCategoryDto): Promise<any> {
-    const category = plainToInstance(ExpenseCategory, createDto);
-    const savedCategory = await this.expenseCategoryRepo.save(category);
-    return this._success({ data: savedCategory });
+  async detailById (id: string) {
+    const expense = await this.expenseRepo.findOne({ where: { id } });
+    return this._success({ data: expense });
   }
 
-  async findAll() {
-    const categories = await this.expenseRepo.find();
-    return this._success({ data: categories });
-  }
+  
 }

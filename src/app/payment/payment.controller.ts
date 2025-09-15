@@ -22,6 +22,11 @@ export class PaymentController {
     return this.paymentService.create(dto);
   }
 
+  @Post('Bulk')
+  createBulk(@Body() dtos: CreatePaymentDto[]) {
+    return this.paymentService.createBulk(dtos);
+  }
+
   @Get('semua')
   findAll() {
     return this.paymentService.findAll();

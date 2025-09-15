@@ -26,6 +26,15 @@ export class PaymentService {
     };
   }
 
+  async createBulk(dtos: CreatePaymentDto[]) {
+    const payments = this.paymentRepo.create(dtos);
+    const saved = await this.paymentRepo.save(payments);
+    return {
+      message: 'Payments created successfully',
+      data: saved,
+    };
+  }
+
   async findAll() {
     const payments = await this.paymentRepo.find({ relations: ['student'] });
     return {

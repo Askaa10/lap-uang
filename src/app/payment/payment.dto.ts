@@ -14,9 +14,12 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   amount: number;
 
-  @IsOptional()
-  @IsString()
-  method?: string;
+    @IsOptional()
+    @IsString()
+    method?: string;
+    @IsOptional()
+    @IsString()
+    typeId?: string;
 
   @IsOptional()
   @IsNumber()

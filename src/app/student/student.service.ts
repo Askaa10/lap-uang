@@ -21,7 +21,7 @@ export class StudentService extends BaseResponse {
     return this._success({ data: students });
   }
 
-  async createStudents(createStudentDtos: CreateStudentDto[]) {
+  async createMany(createStudentDtos: CreateStudentDto[]) {
     if(createStudentDtos.length === 0) {
       return this._success({ data: [] });
     } else if(createStudentDtos.length > 1) {

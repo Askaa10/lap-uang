@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CreateExpenseDto } from './expense.dto';
 import { ExpenseService } from './expense.service';
 import { CreateExpenseCategoryDto } from './create-expense-category.dto';
-import { ExpenseCategory } from './expense.category.entity';
+// import { ExpenseCategory } from './expense.category.entity';
 
 @Controller('expense')
 export class ExpenseController {
@@ -13,9 +13,18 @@ export class ExpenseController {
     return this.expenseService.createMany(dtos);
   }
 
-  @Get('getAll')
+  @Post('create')
+  async createExpense(@Body() dto: CreateExpenseDto) {
+    return this.expenseService.createExpense(dto);
+  }
+
+  @Get('')
   async getAll() {
     return this.expenseService.getAll();
+  }
+  @Get(':id')
+  async getById(@Param('id') id: string) {
+    return this.expenseService.detailById(id);
   }
 
   @Post('updateExpense/:id')
@@ -23,15 +32,9 @@ export class ExpenseController {
     return this.expenseService.updateExpense(id, updateData);
   }
 
-  @Post('categoryCreate')
-  async create(
-    @Body() createDto: CreateExpenseCategoryDto,
-  ): Promise<ExpenseCategory> {
-    return this.expenseService.createKategori(createDto);
+  @Delete(':id')
+  async deleteExpense(@Param('id') id: string) {
+    return this.expenseService.deleteExpense(id);
   }
 
-  @Get('getCategory')
-  async findAll() {
-    return this.expenseService.findAll();
-  }
 }
