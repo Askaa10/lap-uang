@@ -1,72 +1,65 @@
+// src/arrears/arrears.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Arrear } from './arrear.entity';
-import { CreateArrearDto, UpdateArrearDto } from './arrear.dto';
+import { Repository, In } from 'typeorm';
+import { Arrears } from './arrear.entity';
+  import { ArrearsDto } from './arrear.dto';
+import { BaseResponse } from 'src/utils/response/base.response';
+
 
 @Injectable()
-export class ArrearService {
+export class ArrearsService extends BaseResponse {
   constructor(
-    @InjectRepository(Arrear)
-    private readonly arrearRepo: Repository<Arrear>,
-  ) {}
-
-  async create(dto: CreateArrearDto) {
-    const arrear = this.arrearRepo.create(dto);
-    const saved = await this.arrearRepo.save(arrear);
-    return {
-      message: 'Arrear created successfully',
-      data: saved,
-    };
+    @InjectRepository(Arrears)
+    private arrearsRepository: Repository<Arrears>,
+  ) {
+    super();
   }
 
-  async findAll() {
-    const arrears = await this.arrearRepo.find({ relations: ['student', 'type'] });
-    return {
-      message: 'List of arrears',
-      total: arrears.length,
-      data: arrears,
-    };
+  // ✅ Create single arrear
+  async create(dto: ArrearsDto): Promise<Arrears> {
+    const arrear = this.arrearsRepository.create(dto);
+    return this.arrearsRepository.save(arrear);
   }
 
-  async findOne(id: string) {
-    const arrear = await this.arrearRepo.findOne({ where: { id }, relations: ['student', 'type'] });
+  // ✅ Create bulk arrears
+  async createBulk(dtos: ArrearsDto[]): Promise<Arrears[]> {
+    const arrears = this.arrearsRepository.create(dtos);
+    return this.arrearsRepository.save(arrears);
+  }
 
+  // ✅ Find all arrears
+  async findAll(): Promise<Arrears[]> {
+    return this.arrearsRepository.find();
+  }
+
+  // ✅ Find arrear by ID
+  async findOne(id: number): Promise<Arrears> {
+    const arrear = await this.arrearsRepository.findOne({ where: { id } });
     if (!arrear) {
-      throw new NotFoundException('Arrear not found');
+      throw new NotFoundException(`Arrear with ID ${id} not found`);
     }
-
-    return {
-      message: 'Arrear retrieved successfully',
-      data: arrear,
-    };
+    return arrear;
   }
 
-  async update(id: string, dto: UpdateArrearDto) {
-    const arrear = await this.arrearRepo.preload({ id, ...dto });
-
-    if (!arrear) {
-      throw new NotFoundException('Arrear not found');
-    }
-
-    const updated = await this.arrearRepo.save(arrear);
-    return {
-      message: 'Arrear updated successfully',
-      data: updated,
-    };
+  // ✅ Update arrear by ID
+  async update(id: number, dto: Partial<ArrearsDto>): Promise<Arrears> {
+    const arrear = await this.findOne(id);
+    Object.assign(arrear, dto);
+    return this.arrearsRepository.save(arrear);
   }
 
-  async remove(id: string) {
-    const arrear = await this.arrearRepo.findOne({ where: { id } });
+  // ✅ Delete arrear by ID
+  async remove(id: number): Promise<{ deleted: boolean }> {
+    const arrear = await this.findOne(id);
+    await this.arrearsRepository.remove(arrear);
+    return { deleted: true };
+  }
 
-    if (!arrear) {
-      throw new NotFoundException('Arrear not found');
-    }
-
-    await this.arrearRepo.remove(arrear);
-    return {
-      message: 'Arrear deleted successfully',
-      data: arrear,
-    };
+  // ✅ Delete multiple arrears by IDs
+  async removeBulk(ids: number[]): Promise<{ deleted: number }> {
+    const arrears = await this.arrearsRepository.find({ where: { id: In(ids) } });
+    await this.arrearsRepository.remove(arrears);
+    return { deleted: arrears.length };
   }
 }

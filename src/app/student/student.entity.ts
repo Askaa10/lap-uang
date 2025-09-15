@@ -8,8 +8,9 @@ import {
 } from 'typeorm';
 import { Payment } from '../payment/payment.entity';
 import { Major, StudentStatus } from './student.enum';
-import { Arrear } from '../arrear/arrear.entity';
+
 import { SppPayment } from '../spp-payment/spp-payment.entity';
+import { Arrears } from '../arrear/arrear.entity';
 
 // Define or import the Major enum
 
@@ -45,8 +46,8 @@ export class Student {
   @OneToMany(() => Payment, (payment) => payment.student)
   payments: Payment[];
 
-  @OneToMany(() => Arrear, (arrear) => arrear.student)
-  arrears: Arrear[];
+  @OneToMany(() => Arrears, (arrear) => arrear.student)
+  arrears: Arrears[];
 
   @OneToMany(() => SppPayment, (spp) => spp.student)
   spp: SppPayment[];
