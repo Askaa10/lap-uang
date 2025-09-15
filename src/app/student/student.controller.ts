@@ -21,7 +21,7 @@ export class StudentController {
 
   @Post('createBulk')
   createStudent(@Body() data: CreateStudentDto[]) {
-    return this.studentService.createStudents(data);
+    return this.studentService.createMany(data);
   }
 
   @Post('create')

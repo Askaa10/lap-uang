@@ -1,11 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-} from 'typeorm';
-import { ExpenseCategory } from './expense-category.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { CategoryExpense } from './category/category-expense.entity';
 
 @Entity()
 export class Expense {
@@ -15,10 +9,8 @@ export class Expense {
   @Column()
   categoryId: string;
 
-  @ManyToOne(() => ExpenseCategory, (category) => category.expenses, {
-    onDelete: 'CASCADE',
-  })
-  category: ExpenseCategory;
+  @ManyToOne(() => CategoryExpense, (category) => category.expenses, {onDelete: 'CASCADE'})
+  category: CategoryExpense;
 
   @Column({ type: 'timestamp' })
   date: Date;
