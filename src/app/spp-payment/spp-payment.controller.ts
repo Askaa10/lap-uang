@@ -28,6 +28,11 @@ export class SppPaymentController {
   findAll() {
     return this.sppPaymentService.findAll();
   }
+  
+  @Get("student/:id")
+  getByStudentId(@Param('id') studentID: string) {
+    return this.sppPaymentService.getByStudentId(studentID);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

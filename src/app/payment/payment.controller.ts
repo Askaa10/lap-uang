@@ -21,15 +21,25 @@ export class PaymentController {
   create(@Body() dto: CreatePaymentDto) {
     return this.paymentService.create(dto);
   }
+  @Get('cicilan/:typeId')
+  async getMergedPayments(
+    @Param('typeId') typeId: string,
+  ) {
+    return this.paymentService.getGroupedPaymentsByStudent(typeId);
+  }
 
   @Get('semua')
   findAll() {
     return this.paymentService.findAll();
   }
 
-  @Get('rekap')
-  rekap() {
-    return this.paymentService.rekapBulanan()
+  @Get('rekap/:year')
+  rekap(@Param('year') year: number) {
+    return this.paymentService.rekapBulanan(Number(year));
+  }
+  @Get('/category/:name')
+  async findByCategory(@Param('name') name: string) {
+    return this.paymentService.paymentsByCategory(name);
   }
 
   @Get('detail/:id')
@@ -37,9 +47,28 @@ export class PaymentController {
     return this.paymentService.findOne(id);
   }
 
-  @Patch('update/:id')
-  update(@Param('id') id: string, @Body() dto: UpdatePaymentDto) {
-    return this.paymentService.update(id, dto);
+  @Patch('update/:studentId/:year/:type')
+  async updatePayment(
+    @Param('studentId') studentId: string,
+    @Param('year') year: number,
+    @Param('type') typeId: string,
+    @Body()
+    updateDto: {
+      amount?: number; // nominal baru
+      status?: 'LUNAS' | 'BELUM LUNAS'; // status bayar
+    },
+  ) {
+    return this.paymentService.updatePayment(
+      studentId,
+      typeId,
+      Number(year),
+      updateDto,
+    );
+  }
+
+  @Get('/filter/:ids/:idc')
+  async getPaymentsByCNS(@Param('ids') ids: string, @Param('idc') idc: string) {
+    return this.paymentService.getPaymentsByCNS(ids, idc);
   }
 
   @Delete('delete/:id')

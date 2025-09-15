@@ -71,6 +71,15 @@ export class SppPaymentService extends BaseResponse {
     });
   }
 
+  async getByStudentId(studentID:string) {
+    const result = await this.studentRepo.findOne({
+      where: { id: studentID },
+      relations: ['spp']
+    });
+
+    return this._success({data:result})
+  }
+
   async create(dto: CreateSppPaymentDto) {
     const payment = this.sppPaymentRepository.create(dto);
     await this.sppPaymentRepository.save(payment);

@@ -26,6 +26,10 @@ export class CreateStudentDto {
   dorm: string;
 
   @IsNotEmpty()
+  @IsString()
+  NIS: string;
+
+  @IsNotEmpty()
   @IsEnum(Major) // ✅ Pastikan sesuai enum
   major: Major;
 }

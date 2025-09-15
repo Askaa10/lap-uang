@@ -1,5 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNotEmpty, IsOptional, IsNumber, IsString, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsNumber, IsString, IsDateString, IsEnum } from 'class-validator';
+import { PaymentStatus } from './payment.entity';
 
 export class CreatePaymentDto {
   @IsString()
@@ -17,6 +18,14 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsString()
   method?: string;
+
+  @IsOptional()
+  @IsString()
+  typeId?: string;
+
+  // @IsOptional()
+  // @IsEnum(['LUNAS', 'BELUM LUNAS'])
+  // status?: PaymentStatus;
 
   @IsOptional()
   @IsNumber()

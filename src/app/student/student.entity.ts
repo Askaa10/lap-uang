@@ -36,6 +36,9 @@ export class Student {
   @Column({ type: 'enum', enum: Major })
   major: Major;
 
+  @Column()
+  NIS: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -11,6 +11,12 @@ import { Student } from '../student/student.entity';
 import { Receipt } from '../receipts/receipt.entity';
 import { PaymentType } from './payment-type/payment-type.entity';
 
+
+export enum PaymentStatus {
+  BELUM_LUNAS = 'BELUM LUNAS',
+  LUNAS = 'LUNAS',
+}
+
 @Entity('payments')
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
@@ -27,6 +33,13 @@ export class Payment {
 
   @Column()
   date: Date;
+
+  @Column({
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.BELUM_LUNAS,
+  })
+  status: PaymentStatus; // 🔥 tambahkan ini
 
   @Column()
   amount: number;
