@@ -1,30 +1,49 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { IsNotEmpty, IsString, IsNumber, IsBoolean } from 'class-validator';
+// src/arrears/dto/arrears.dto.ts
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsString,
+  IsPositive,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 
-export class CreateArrearDto {
-  @IsString()
+export class ArrearsDto {
+  @IsOptional() // wajib hanya saat delete
+  @IsInt()
+  @IsPositive()
+  id?: number;
+
   @IsNotEmpty()
+  @IsString()
   studentId: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   typeId: string;
 
-  @IsNumber()
   @IsNotEmpty()
-  month: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  year: number;
-
-  @IsNumber()
-  @IsNotEmpty()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsPositive()
   amount: number;
 
-  @IsBoolean()
-  resolved: boolean;
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  month: number;
+
+  @IsNotEmpty()
+  @IsString()
+  semester: string; // "Odd" | "Even"
+
+  @IsNotEmpty()
+  @IsInt()
+  TA: number; // Tahun Ajaran
+
+  @IsInt()
+  @Min(1)
+  monthsInArrears: number;
 }
-
-
-export class UpdateArrearDto extends PartialType(CreateArrearDto) {}

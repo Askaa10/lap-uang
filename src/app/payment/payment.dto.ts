@@ -22,9 +22,7 @@ export class CreatePaymentDto {
     @IsString()
     typeId?: string;
 
-  @IsOptional()
-  @IsString()
-  typeId?: string;
+
 
   // @IsOptional()
   // @IsEnum(['LUNAS', 'BELUM LUNAS'])
