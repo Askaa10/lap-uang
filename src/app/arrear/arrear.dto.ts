@@ -25,6 +25,10 @@ export class ArrearsDto {
   typeId: string;
 
   @IsNotEmpty()
+  @IsString()
+  status: string;
+
+  @IsNotEmpty()
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   amount: number;

@@ -16,6 +16,9 @@ export class PaymentType {
 
   @Column()
   nominal: number;
+
+  @Column({ default: '' })
+  status: string;
   
   @Column({ default: '' })
   TA: string;
