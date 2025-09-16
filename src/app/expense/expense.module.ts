@@ -9,12 +9,13 @@ import { CategoryExpenseService } from './category/category-expense.service';
 import { BudgetPlan } from './budget-plant/budget-expense.entity';
 import { BudgetExpenseService } from './budget-plant/budget-expense.service';
 import { CategoryExpenseController } from './category/caetegory-expense.controller';
+import { BudgetExpenseController } from './budget-plant/budget-expense.controller';
 // import { ExpenseCategory } from './expense.category.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Expense, CategoryExpense,BudgetPlan])],
   providers: [ExpenseService, CategoryExpenseService,BudgetExpenseService],
-  controllers: [ExpenseController,CategoryExpenseController,BudgetExpenseService],
-  exports: [ExpenseService, CategoryExpenseService,BudgetExpenseService], // jika dipakai di module lain
+  controllers: [ExpenseController,CategoryExpenseController,BudgetExpenseController],
+  exports: [ExpenseService], // jika dipakai di module lain
 })
 export class ExpenseModule {}
