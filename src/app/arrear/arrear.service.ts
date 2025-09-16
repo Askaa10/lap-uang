@@ -3,9 +3,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Arrears } from './arrear.entity';
-  import { ArrearsDto } from './arrear.dto';
+import { ArrearsDto } from './arrear.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
-
 
 @Injectable()
 export class ArrearsService extends BaseResponse {
@@ -17,49 +16,125 @@ export class ArrearsService extends BaseResponse {
   }
 
   // ✅ Create single arrear
-  async create(dto: ArrearsDto): Promise<Arrears> {
+  async create(dto: ArrearsDto) {
     const arrear = this.arrearsRepository.create(dto);
-    return this.arrearsRepository.save(arrear);
+    const saved = await this.arrearsRepository.save(arrear);
+    return this._success({
+      auth: null,
+      data: saved,
+      errors: null,
+      links: { self: '/arrears' },
+      included: null,
+      message: {
+        id: 'Berhasil dibuat',
+        en: 'Successfully created',
+      },
+    });
   }
 
   // ✅ Create bulk arrears
-  async createBulk(dtos: ArrearsDto[]): Promise<Arrears[]> {
+  async createBulk(dtos: ArrearsDto[]) {
     const arrears = this.arrearsRepository.create(dtos);
-    return this.arrearsRepository.save(arrears);
+    const saved = await this.arrearsRepository.save(arrears);
+    return this._success({
+      auth: null,
+      data: saved,
+      errors: null,
+      links: { self: '/arrears/bulk' },
+      included: null,
+      message: {
+        id: 'Data berhasil dibuat',
+        en: 'Data created successfully',
+      },
+    });
   }
 
   // ✅ Find all arrears
-  async findAll(): Promise<Arrears[]> {
-    return this.arrearsRepository.find();
+  async findAll() {
+    const data = await this.arrearsRepository.find();
+    return this._success({
+      auth: null,
+      data,
+      errors: null,
+      links: { self: '/arrears/all' },
+      included: null,
+      message: {
+        id: 'Data berhasil diambil',
+        en: 'Data fetched successfully',
+      },
+    });
   }
 
   // ✅ Find arrear by ID
-  async findOne(id: number): Promise<Arrears> {
+  async findOne(id: number) {
     const arrear = await this.arrearsRepository.findOne({ where: { id } });
-    if (!arrear) {
-      throw new NotFoundException(`Arrear with ID ${id} not found`);
-    }
-    return arrear;
+    if (!arrear) throw new NotFoundException(`Arrear with ID ${id} not found`);
+
+    return this._success({
+      auth: null,
+      data: arrear,
+      errors: null,
+      links: { self: `/arrears/detail/${id}` },
+      included: null,
+      message: {
+        id: 'Data ditemukan',
+        en: 'Data found',
+      },
+    });
   }
 
   // ✅ Update arrear by ID
-  async update(id: number, dto: Partial<ArrearsDto>): Promise<Arrears> {
-    const arrear = await this.findOne(id);
-    Object.assign(arrear, dto);
-    return this.arrearsRepository.save(arrear);
+  async update(id: number, dto: Partial<ArrearsDto>) {
+    const arrear = await this.arrearsRepository.preload({ id, ...dto });
+    if (!arrear) throw new NotFoundException(`Arrear with ID ${id} not found`);
+
+    const updated = await this.arrearsRepository.save(arrear);
+    return this._success({
+      auth: null,
+      data: updated,
+      errors: null,
+      links: { self: `/arrears/update/${id}` },
+      included: null,
+      message: {
+        id: 'Data berhasil diperbarui',
+        en: 'Data updated successfully',
+      },
+    });
   }
 
   // ✅ Delete arrear by ID
-  async remove(id: number): Promise<{ deleted: boolean }> {
-    const arrear = await this.findOne(id);
+  async remove(id: number) {
+    const arrear = await this.arrearsRepository.findOne({ where: { id } });
+    if (!arrear) throw new NotFoundException(`Arrear with ID ${id} not found`);
+
     await this.arrearsRepository.remove(arrear);
-    return { deleted: true };
+    return this._success({
+      auth: null,
+      data: arrear,
+      errors: null,
+      links: { self: `/arrears/delete/${id}` },
+      included: null,
+      message: {
+        id: 'Data berhasil dihapus',
+        en: 'Data deleted successfully',
+      },
+    });
   }
 
   // ✅ Delete multiple arrears by IDs
-  async removeBulk(ids: number[]): Promise<{ deleted: number }> {
+  async removeBulk(ids: number[]) {
     const arrears = await this.arrearsRepository.find({ where: { id: In(ids) } });
     await this.arrearsRepository.remove(arrears);
-    return { deleted: arrears.length };
+    return this._success({
+      auth: null,
+      data: { deleted: arrears.length },
+      errors: null,
+      links: { self: '/arrears/delete-bulk' },
+      included: null,
+      message: {
+        id: 'Data berhasil dihapus (bulk)',
+        en: 'Data deleted successfully (bulk)',
+      },
+    });
   }
 }

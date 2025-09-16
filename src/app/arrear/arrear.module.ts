@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Arrear } from './arrear.entity';
-import { ArrearService } from './arrear.service';
-import { ArrearController } from './arrear.controller';
+import { Arrears } from './arrear.entity';
+import { ArrearsController } from './arrear.controller';
+import { ArrearsService } from './arrear.service';
+
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Arrear])],
-  controllers: [ArrearController],
-  providers: [ArrearService],
+  imports: [TypeOrmModule.forFeature([Arrears])],
+  controllers: [ArrearsController],
+  providers: [ArrearsService],
 })
 export class ArrearModule {}
