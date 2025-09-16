@@ -18,4 +18,20 @@ export class BudgetPlan {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column()
+  PJ: string;
+
+  @Column()
+  recipient : string
+
+  @Column()
+  description : string
+
+  @Column({ nullable: true })
+  duration : number
+
+  @Column({ nullable: true })
+  Apply_At : Date;
+
 }
