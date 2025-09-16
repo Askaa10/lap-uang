@@ -40,6 +40,9 @@ export class Payment {
   @Column({ nullable: true })
   year?: number;
 
+  @Column({ default: 'BELUM_LUNAS' })
+  status: string;
+
   @OneToOne(() => Receipt, (receipt) => receipt.payment, {
     cascade: true,
     nullable: true,

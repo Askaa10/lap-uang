@@ -31,8 +31,14 @@ export class Arrears {
   @Column({ type: 'varchar', length: 10 })
   typeId: string;
 
+  @Column({ type: 'varchar', length: 10 })
+  status: string;
+
   @Column('decimal', { precision: 12, scale: 2 })
   amount: number;
+
+  @Column({ type: 'date' })
+  dueDate: Date;
 
   @Column({ type: 'int' })
   month: number; // 1-12 (January = 1)
