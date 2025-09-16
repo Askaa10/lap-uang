@@ -28,7 +28,7 @@ export class BudgetExpenseService extends BaseResponse {
     // Convert category from string (id) to CategoryExpense object
     const budgetPlan: Partial<BudgetPlan> = {
       ...dto,
-      category: dto.category ? { id: dto.category } as CategoryExpense : undefined,
+      category: dto.category_id ? { id: dto.category_id } as CategoryExpense : undefined,
     };
     const data = await this.repo.save(budgetPlan);
     return this._success({ data });

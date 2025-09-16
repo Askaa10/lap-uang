@@ -10,6 +10,9 @@ export class BudgetPlan {
   @JoinColumn({ name: 'category_id' })
   category: CategoryExpense;
 
+  @Column()
+  category_id: string;
+
   @Column({ type: 'decimal', precision: 15, scale: 2 })
   amount: number;
 

@@ -13,7 +13,7 @@ export class BudgetExpenseController {
         return await this.service.getAll();
     }
 
-    @Post()
+    @Post('create')
     async create(@Body() createBudgetExpenseDto: createBudgetExpenseDto) {
         return await this.service.create(createBudgetExpenseDto);
     }

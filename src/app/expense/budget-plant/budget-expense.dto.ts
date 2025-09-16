@@ -1,6 +1,6 @@
 export class createBudgetExpenseDto {
     amount: number;
-    category: string;
+    category_id: string;
     period: string
 }
 
