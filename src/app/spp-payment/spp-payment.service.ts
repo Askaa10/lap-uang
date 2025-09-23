@@ -20,7 +20,9 @@ export class SppPaymentService extends BaseResponse {
 
   async getSppRekap(year: number) {
     // Ambil semua siswa
-    const students = await this.studentRepo.find();
+    const students = await this.studentRepo.find(
+      {where : {isDelete : false}}
+    );
 
     // Ambil semua pembayaran SPP tahun tertentu
     const payments = await this.sppPaymentRepository.find({

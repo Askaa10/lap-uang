@@ -37,6 +37,9 @@ export class Student {
   @Column({ type: 'enum', enum: Major })
   major: Major;
 
+  @Column({default : false})
+  isDelete: boolean;
+
   @Column()
   NIS: string;
 

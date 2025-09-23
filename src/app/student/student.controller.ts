@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
 } from '@nestjs/common';
@@ -42,5 +43,9 @@ export class StudentController {
   @Get("detail/:id")
   detailStudent(@Param('id') id: string, ) {
 
+  }
+  @Patch("updateStatusDelete/:id")
+  updateStatusDelete(@Body() payload : any, @Param('id') id: string) {
+    return this.studentService.updateStatusDelete(payload, id);
   }
 }

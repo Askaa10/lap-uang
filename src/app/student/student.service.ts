@@ -70,4 +70,10 @@ export class StudentService extends BaseResponse {
     const student = await this.Sr.findOne({ where: { id } });
     return this._success({ data: student });
   }
+
+  async updateStatusDelete(payload : any, id: string){
+    await this.Sr.update(id, payload);
+    const updatedStudent = await this.Sr.findOne({ where: { id } });
+    return this._success({ data: updatedStudent });
+  }
 }
