@@ -16,13 +16,16 @@ export class CategoryExpense {
   nominal : number;
 
   @Column({ nullable: true })
-  TA : string;
+  periode : string;
 
   @Column({ nullable: true })
   semester: number;
 
-  @OneToMany(() => BudgetPlan, (plan) => plan.category)
-  budgetPlans: BudgetPlan[];
+  @Column()
+  decs: string;  
+
+  // @OneToMany(() => BudgetPlan, (plan) => plan.category)
+  // budgetPlans: BudgetPlan[];
 
   @OneToMany(() => Expense, (expense) => expense.category)
   expenses: Expense[];

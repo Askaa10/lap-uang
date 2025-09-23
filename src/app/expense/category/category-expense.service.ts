@@ -17,7 +17,7 @@ export class CategoryExpenseService extends BaseResponse {
 
     async getAll(){
         const data = await this.repo.find();
-        return this._success({ data });
+        return this._success({ data , links: { self: '/expense-category' } });
     }
 
     async create(dto: CreateCategoryDto) {

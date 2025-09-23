@@ -215,7 +215,12 @@ export class PaymentService extends BaseResponse {
         const key = snakeCase(payment.type.name);
         const index = payments.findIndex((p) => p.category === key);
         if (index !== -1) {
-          payments[index].status = payment.status ? 'LUNAS' : 'BELUM_LUNAS';
+          payments[index].status =
+            payment.status && payment.status == 'LUNAS'
+              ? 'LUNAS'
+              : payment.status == 'BELUM LUNAS'
+                ? 'BELUM_LUNAS'
+                : 'TUNGGAKAN';
         }
       });
 

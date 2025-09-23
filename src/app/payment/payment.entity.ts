@@ -15,6 +15,7 @@ import { PaymentType } from './payment-type/payment-type.entity';
 export enum PaymentStatus {
   BELUM_LUNAS = 'BELUM LUNAS',
   LUNAS = 'LUNAS',
+  TUNGGAKAN = "TUNGGAKAN"
 }
 
 @Entity('payments')

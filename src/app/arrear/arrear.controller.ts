@@ -40,19 +40,19 @@ export class ArrearsController {
 
   // ✅ Ambil data berdasarkan ID
   @Get('detail/:id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseIntPipe) id: string) {
     return this.arrearsService.findOne(id);
   }
 
   // ✅ Update data berdasarkan ID
   @Put('update/:id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<ArrearsDto>) {
+  update(@Param('id', ParseIntPipe) id: string, @Body() dto: Partial<ArrearsDto>) {
     return this.arrearsService.update(id, dto);
   }
 
   // ✅ Hapus satu data
   @Delete('hapus/:id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseIntPipe) id: string) {
     return this.arrearsService.remove(id);
   }
 

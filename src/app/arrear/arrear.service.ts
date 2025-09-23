@@ -6,7 +6,7 @@ import { Repository, In } from 'typeorm';
 import { Arrears } from './arrear.entity';
 import { ArrearsDto } from './arrear.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
-import { Payment } from '../payment/payment.entity';
+import { Payment, PaymentStatus } from '../payment/payment.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 @Injectable()
 export class ArrearsService extends BaseResponse {
@@ -21,7 +21,7 @@ export class ArrearsService extends BaseResponse {
   }
 
   // ✅ Create single arrear
-  async create(dto: ArrearsDto) {
+  async create(dto: any) {
     const arrear = this.arrearsRepository.create(dto);
     const saved = await this.arrearsRepository.save(arrear);
     return this._success({
@@ -38,7 +38,7 @@ export class ArrearsService extends BaseResponse {
   }
 
   // ✅ Create bulk arrears
-  async createBulk(dtos: ArrearsDto[]) {
+  async createBulk(dtos: any) {
     const arrears = this.arrearsRepository.create(dtos);
     const saved = await this.arrearsRepository.save(arrears);
     return this._success({
@@ -57,9 +57,10 @@ export class ArrearsService extends BaseResponse {
   // ✅ Find all arrears
   async findAll() {
     const data = await this.arrearsRepository.find();
+console.log(data);
     return this._success({
       auth: null,
-      data,
+      data: data,
       errors: null,
       links: { self: '/arrears/all' },
       included: null,
@@ -71,7 +72,7 @@ export class ArrearsService extends BaseResponse {
   }
 
   // ✅ Find arrear by ID
-  async findOne(id: number) {
+  async findOne(id: string) {
     const arrear = await this.arrearsRepository.findOne({ where: { id } });
     if (!arrear) throw new NotFoundException(`Arrear with ID ${id} not found`);
 
@@ -89,7 +90,7 @@ export class ArrearsService extends BaseResponse {
   }
 
   // ✅ Update arrear by ID
-  async update(id: number, dto: Partial<ArrearsDto>) {
+  async update(id: string, dto: any) {
     const arrear = await this.arrearsRepository.preload({ id, ...dto });
     if (!arrear) throw new NotFoundException(`Arrear with ID ${id} not found`);
 
@@ -108,7 +109,7 @@ export class ArrearsService extends BaseResponse {
   }
 
   // ✅ Delete arrear by ID
-  async remove(id: number) {
+  async remove(id: string) {
     const arrear = await this.arrearsRepository.findOne({ where: { id } });
     if (!arrear) throw new NotFoundException(`Arrear with ID ${id} not found`);
 
@@ -144,41 +145,75 @@ export class ArrearsService extends BaseResponse {
   }
 
   // ✅ Cron job: pindahkan payment overdue ke arrears tiap jam 12 malam
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async moveOverduePaymentsToArrears() {
     const today = new Date();
+     console.log(
+       `[CRON JOB] moveOverduePaymentsToArrears running at: ${today.toISOString()}`,
+     );
 
     const overduePayments = await this.paymentRepository.find({
-      where: { status: 'BELUM_LUNAS' },
+      where: {
+        status: PaymentStatus.TUNGGAKAN
+      }
     });
 
+    console.log(overduePayments);
+
+
     const arrearsToInsert: Arrears[] = [];
+    console.log(arrearsToInsert);
 
     for (const payment of overduePayments) {
+      
       const createdDate = new Date(payment.createdAt);
-      const diffDays = Math.floor(
-        (today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
+      const range = Math.floor(
+        (today.getTime() - createdDate.getTime()) / (1000),
       );
 
-      if (diffDays > 30) {
-        const arrear = this.arrearsRepository.create({
-          studentId: payment.studentId,
-          typeId: payment.typeId,
-          amount: payment.amount,
-          dueDate: payment.createdAt,
-          status: 'TUNGGAKAN',
-        });
-        arrearsToInsert.push(arrear);
+      console.log(range);
 
-        // update status payment
-        payment.status = 'TUNGGAKAN';
-        await this.paymentRepository.save(payment);
+      if (range >= 10) {
+         const arrears = await this.arrearsRepository.findOne({
+           where: {
+             studentId: payment.studentId,
+             typeId: payment.typeId,
+           },
+         });
+        console.log(
+          `[CRON JOB] Payment #${payment.id} overdue (created at ${payment.createdAt}), moving to arrears`,
+        );
+        if (!arrears) {
+           const arrear = this.arrearsRepository.create({
+             studentId: payment.studentId,
+             typeId: payment.typeId,
+             amount: payment.amount,
+             dueDate: payment.createdAt,
+             status: 'TUNGGAKAN',
+             month: new Date().getMonth(),
+             semester: 5,
+             TA: `${new Date().getFullYear() + 1}/${new Date().getFullYear() + 2}`,
+            //  monthsInArrears: 2
+           });
+           arrearsToInsert.push(arrear);
+        }
+       
+
+        // // update status payment
+        // payment.status = PaymentStatus.BELUM_LUNAS;
+        // await this.paymentRepository.save(payment);
       }
     }
+    // console.log(arrearsToInsert);
 
-    if (arrearsToInsert.length > 0) {
-      await this.arrearsRepository.save(arrearsToInsert);
-    }
+   if (arrearsToInsert.length > 0) {
+     await this.arrearsRepository.save(arrearsToInsert);
+     console.log(
+       `[CRON JOB] ${arrearsToInsert.length} payments moved to arrears ✅`,
+     );
+   } else {
+     console.log(`[CRON JOB] No payments to move this run`);
+   }
 
     return this._success({
       auth: null,

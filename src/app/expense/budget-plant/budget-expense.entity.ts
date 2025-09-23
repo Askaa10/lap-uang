@@ -6,9 +6,9 @@ export class BudgetPlan {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => CategoryExpense, (category) => category.budgetPlans, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'category_id' })
-  category: CategoryExpense;
+  // @ManyToOne(() => CategoryExpense, (category) => category.budgetPlans, { onDelete: 'CASCADE' })
+  // @JoinColumn({ name: 'category_id' })
+  // category: CategoryExpense;
 
   @Column({ type: 'decimal', precision: 15, scale: 2 })
   amount: number;
@@ -18,4 +18,20 @@ export class BudgetPlan {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column()
+  PJ: string;
+
+  @Column()
+  recipient : string
+
+  @Column()
+  description : string
+
+  @Column({ nullable: true })
+  duration : number
+
+  @Column({ nullable: true })
+  Apply_At : Date;
+
 }

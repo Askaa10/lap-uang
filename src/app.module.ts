@@ -13,6 +13,7 @@ import { ArrearModule } from './app/arrear/arrear.module';
 import { ExpenseModule } from './app/expense/expense.module';
 import { InitialBalanceModule } from './app/initial-balance/initial-balance.module';
 import { SppPaymentModule } from './app/spp-payment/spp-payment.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -26,6 +27,8 @@ import { SppPaymentModule } from './app/spp-payment/spp-payment.module';
         return typeOrmConfig;
       },
     }),
+        ScheduleModule.forRoot(),
+    
     AuthModule,
     MailModule,
     SchoolProfileModule,

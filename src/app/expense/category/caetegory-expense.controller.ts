@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/commo
 import { CategoryExpenseService } from './category-expense.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './category-expense.dto';
 
-@Controller('expense')
+@Controller('expense-category')
 export class CategoryExpenseController {
   constructor(private readonly ces: CategoryExpenseService) {}
 
@@ -28,7 +28,7 @@ export class CategoryExpenseController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+  async update(@Param('id') id: string, @Body() dto: any) {
     return this.ces.update(id, dto);
   }
 

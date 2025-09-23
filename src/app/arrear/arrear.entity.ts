@@ -14,24 +14,24 @@ import { PaymentType } from '../payment/payment-type/payment-type.entity';
 
 @Entity('arrears')
 export class Arrears {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @ManyToOne(() => Student, (student) => student.arrears, { eager: true })
   @JoinColumn({ name: 'studentId' })
   student: Student;
 
-  @Column({ type: 'varchar', length: 10 })
+  @Column({ type: 'varchar' })
   studentId: string;
 
   @ManyToOne(() => PaymentType, (type) => type.arrears, { eager: true })
   @JoinColumn({ name: 'typeId' })
   type: PaymentType;
 
-  @Column({ type: 'varchar', length: 10 })
+  @Column({ type: 'varchar' })
   typeId: string;
 
-  @Column({ type: 'varchar', length: 10 })
+  @Column({ type: 'varchar' })
   status: string;
 
   @Column('decimal', { precision: 12, scale: 2 })
@@ -43,13 +43,13 @@ export class Arrears {
   @Column({ type: 'int' })
   month: number; // 1-12 (January = 1)
 
-  @Column({ type: 'varchar', length: 10 })
-  semester: string; // "Odd" | "Even"
+  @Column()
+  semester: number; // "Odd" | "Even"
 
-  @Column({ type: 'int' })
-  TA: number; // e.g. 2025
+  @Column()
+  TA: string; // e.g. 2025
 
-  @Column({ type: 'int', name: 'months_in_arrears', default: 1 })
+  @Column({ type: 'int', default: 1})
   monthsInArrears: number;
 
   @CreateDateColumn({ name: 'created_at' })
