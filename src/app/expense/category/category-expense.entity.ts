@@ -12,15 +12,7 @@ export class CategoryExpense {
   @Column({ unique: true })
   name: string;
 
-  @Column({ nullable: true })
-  nominal : number;
-
-  @Column({ nullable: true })
-  periode : string;
-
-  @Column({ nullable: true })
-  semester: number;
-
+  
   @Column()
   decs: string;  
 

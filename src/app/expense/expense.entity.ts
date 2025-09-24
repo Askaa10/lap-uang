@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Collection } from 'typeorm';
 import { CategoryExpense } from './category/category-expense.entity';
 
 @Entity()
@@ -15,6 +15,15 @@ export class Expense {
   @Column({ type: 'timestamp' })
   date: Date;
 
+  @Column()
+  pihakPenerima : string;
+
+  @Column()
+  itemCount : string;
+
+  @Column()
+  kwitansiUrl : string;
+  
   @Column()
   amount: number;
     
