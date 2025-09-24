@@ -18,7 +18,7 @@ export class SppPaymentService extends BaseResponse {
     super();
   }
 
-  async getSppRekap(year: number) {
+  async getSppRekap(year: string) {
     // Ambil semua siswa
     const students = await this.studentRepo.find(
       {where : {isDelete : false}}
@@ -73,9 +73,9 @@ export class SppPaymentService extends BaseResponse {
     });
   }
 
-  async getByStudentId(studentID:string) {
+  async getByStudentId(studentID:string, year:string) {
     const result = await this.studentRepo.findOne({
-      where: { id: studentID },
+      where: { id: studentID, spp: {year: year} },
       relations: ['spp']
     });
 

@@ -37,7 +37,7 @@ export class SppPayment {
   month: string;
 
   @Column()
-  year: number;
+  year: string;
 
   @Column('int')
   nominal: number;

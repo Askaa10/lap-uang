@@ -17,7 +17,7 @@ export class StudentService extends BaseResponse {
   }
 
   async getAll() {
-    const students = await this.Sr.find();
+    const students = await this.Sr.find({where: {isDelete: false}});
     return this._success({ data: students });
   }
 
