@@ -12,7 +12,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import multer from 'multer';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { BaseResponse } from 'src/utils/response/base.response';
-
+import { File as MulterFile } from 'multer';
+import { File as MulterFileType } from 'multer';
+// @UseGuards(JwtGuard)
 @Controller('upload')
 export class UploadController extends BaseResponse {
   constructor(private readonly cloudinaryService: CloudinaryService) {
