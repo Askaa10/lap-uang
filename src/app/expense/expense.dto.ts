@@ -23,6 +23,18 @@ export class CreateExpenseDto {
   @IsNumber()
   amount: number;
 
+  @IsNotEmpty({ message: 'Penerima wajib diisi' })
+  @IsString()
+  pihakPenerima: string;
+
+  @IsNotEmpty({ message: 'Jumlah item wajib diisi' })
+  @IsString()
+  itemCount: string;
+
+  @IsNotEmpty({ message: 'Link kwitansi wajib diisi' })
+  @IsString()
+  kwitansiUrl: string;
+
   @IsNotEmpty({ message: 'Deskripsi wajib diisi' })
   @IsString()
   description: string;
