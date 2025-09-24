@@ -5,87 +5,50 @@ import {
   HttpStatus,
   Param,
   Post,
-  UploadedFile,
-  UploadedFiles,
-  UseGuards,
+  Body,
   UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { JwtGuard } from '../auth/auth.guard';
-import * as fs from 'fs';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { BaseResponse } from 'src/utils/response/base.response';
-import { File as MulterFile } from 'multer';
-import { File as MulterFileType } from 'multer';
-// @UseGuards(JwtGuard)
+import { v2 as cloudinary } from 'cloudinary';
+import { Express } from 'express';
+
 @Controller('upload')
-export class UploadController extends BaseResponse {
-  constructor(private readonly cloudinaryService: CloudinaryService) {
-    super();
-  }
+export class UploadController {
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
 
-  @UseInterceptors(
-    FilesInterceptor('file', 10, {
-      storage: diskStorage({
-        destination: 'public/uploads',
-        filename: (req, file, cb) => {
-          const fileExtension = file.originalname.split('.').pop();
-          cb(null, `${new Date().getTime()}.${fileExtension}`);
-        },
-      }),
-      limits: {
-        fileSize: 2 * 1024 * 1024,
-      },
-      fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-        if (
-          !allowedTypes.includes(file.mimetype) ||
-          file.size > 2 * 1024 * 1024
-        ) {
-          return cb(
-            new HttpException(
-              `Hanya file gambar dan pdf yang berukuran kurang dari 2MB yang bisa di upload, file ${file.originalname} tidak sesuai`,
-              HttpStatus.BAD_REQUEST,
-            ),
-            false,
-          );
-        }
-        return cb(null, true);
-      },
-    }),
-  )
-  @Post('file')
-  async uploadFiles(
-    @UploadedFiles() files: Array<MulterFile>,
-  ) {
-    // proses upload file
-    return {
-      message: 'Upload berhasil',
-      files,
-    };
-  }
-
-  @Delete('file/delete/:filename')
-async DeleteFile(
-    @Param('filename') filename: string,
-) {
+  @Post('file/base64')
+  async uploadBase64(@Body() body: { fileBase64: string }) {
     try {
-        const filePath = `public/uploads/${filename}`;
-        fs.unlinkSync(filePath);
-        return { message: 'File deleted successfully' };
+      const result = await this.cloudinaryService.uploadBase64(body.fileBase64);
+      return { message: 'OK', data: result };
     } catch (err) {
-        throw new HttpException('File not Found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Ada Kesalahan', HttpStatus.BAD_REQUEST);
     }
-}
-
-  @Post('cloudinary')
-  async uploadImage(@UploadedFile() file: MulterFile) {
-    return this.cloudinaryService.uploadFile(file);
   }
 
-  @Delete('cloudinary/delete/:public_id')
-  async deleteImage(@Param('public_id') public_id: string) {
-    return this.cloudinaryService.deleteImage(public_id);
+  @Post('file')
+  @UseInterceptors(FileInterceptor('file')) // "file" = key form-data
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    try {
+      const result = await this.cloudinaryService.uploadFile(file);
+      return { message: 'OK', data: result };
+    } catch (err) {
+      throw new HttpException('Ada Kesalahan Upload File', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Delete('cloudinary/:publicId')
+  async deleteCloudinaryFile(@Param('publicId') publicId: string) {
+    try {
+      const result = await cloudinary.uploader.destroy(publicId);
+      if (result.result !== 'ok') {
+        throw new HttpException('Gagal menghapus file di Cloudinary', HttpStatus.BAD_REQUEST);
+      }
+      return { message: 'Berhasil menghapus file dari Cloudinary' };
+    } catch (err) {
+      throw new HttpException('File tidak ditemukan atau sudah dihapus', HttpStatus.NOT_FOUND);
+    }
   }
 }
