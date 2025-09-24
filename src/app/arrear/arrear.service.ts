@@ -7,7 +7,6 @@ import { Arrears } from './arrear.entity';
 import { ArrearsDto } from './arrear.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
 import { Payment, PaymentStatus } from '../payment/payment.entity';
-import { Cron, CronExpression } from '@nestjs/schedule';
 @Injectable()
 export class ArrearsService extends BaseResponse {
   constructor(
