@@ -43,6 +43,9 @@ export class Student {
   @Column()
   NIS: string;
 
+  @Column({ nullable: true })
+  NISN: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

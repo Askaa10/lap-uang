@@ -48,4 +48,11 @@ export class StudentController {
   updateStatusDelete(@Body() payload : any, @Param('id') id: string) {
     return this.studentService.updateStatusDelete(payload, id);
   }
+
+  @Get('deduplicate')
+  async deduplicateStudent(@Body('byNIS') byNIS: boolean = true) {
+    // byNIS: true = cek duplikat berdasarkan NIS, false = cek berdasarkan NISN
+    const result = await this.studentService.deduplicate(byNIS);
+    return result;
+  }
 }

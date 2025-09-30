@@ -76,4 +76,35 @@ export class StudentService extends BaseResponse {
     const updatedStudent = await this.Sr.findOne({ where: { id } });
     return this._success({ data: updatedStudent });
   }
+
+  async deduplicate(byNIS: boolean = true) {
+    const students = await this.Sr.find({ where: { isDelete: false } });
+    const seen = new Set();
+    const toDelete: string[] = [];
+
+    for (const student of students) {
+      const key = byNIS ? student.NIS : student.NISN;
+      if (key && seen.has(key)) {
+        // duplikat, tandai untuk dihapus
+        toDelete.push(student.id);
+      } else if (key) {
+        seen.add(key);
+      }
+    }
+
+    // Hapus semua yang duplikat
+    if (toDelete.length > 0) {
+      await this.Sr.update(toDelete, { isDelete: true });
+    }
+
+    return this._success({
+      data: {
+        deleted: toDelete.length,
+        deletedIds: toDelete,
+      },
+      message: toDelete.length > 0
+        ? { en: 'Duplicates found and deleted', id: 'Duplikat ditemukan dan dihapus' }
+        : { en: 'No duplicates found', id: 'Tidak ada duplikat' },
+    });
+  }
 }
