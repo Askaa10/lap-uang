@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
-import { Major, StudentStatus } from "./student.enum";
+import { Major, ProgramType, StudentStatus } from "./student.enum";
 import { PartialType } from "@nestjs/mapped-types";
 
 
@@ -20,6 +20,10 @@ export class CreateStudentDto {
   @IsNotEmpty()
   @IsEnum(StudentStatus) // ✅ Pastikan sesuai enum
   status: StudentStatus;
+
+  @IsNotEmpty()
+  @IsEnum(ProgramType)
+  tipeProgram: ProgramType;
 
   @IsNotEmpty()
   @IsString()
