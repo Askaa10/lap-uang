@@ -12,7 +12,8 @@ import { ReceiptsModule } from './app/receipts/receipts.module';
 import { ArrearModule } from './app/arrear/arrear.module';
 import { ExpenseModule } from './app/expense/expense.module';
 import { InitialBalanceModule } from './app/initial-balance/initial-balance.module';
-import { SppPaymentModule } from './app/spp-payment/spp-payment.module';
+import { CloudinaryModule } from './app/cloudinary/cloudinary.module';
+import { UploadModule } from './app/upload/upload.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -38,7 +39,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     ArrearModule,
     ExpenseModule,
     InitialBalanceModule,
-    SppPaymentModule,
+    CloudinaryModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

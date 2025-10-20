@@ -25,7 +25,7 @@ export class CreateExpenseDto {
 
   @IsNotEmpty({ message: 'Penerima wajib diisi' })
   @IsString()
-  pihakPenerima: string;
+  userPm: string;
 
   @IsNotEmpty({ message: 'Jumlah item wajib diisi' })
   @IsString()

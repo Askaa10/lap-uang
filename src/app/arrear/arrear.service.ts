@@ -145,86 +145,86 @@ console.log(data);
   }
 
   // ✅ Cron job: pindahkan payment overdue ke arrears tiap jam 12 malam
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  async moveOverduePaymentsToArrears() {
-    const today = new Date();
-     console.log(
-       `[CRON JOB] moveOverduePaymentsToArrears running at: ${today.toISOString()}`,
-     );
+  // @Cron(CronExpression.EVERY_10_SECONDS)
+  // async moveOverduePaymentsToArrears() {
+  //   const today = new Date();
+  //    console.log(
+  //      `[CRON JOB] moveOverduePaymentsToArrears running at: ${today.toISOString()}`,
+  //    );
 
-    const overduePayments = await this.paymentRepository.find({
-      where: {
-        status: PaymentStatus.TUNGGAKAN
-      }
-    });
+  //   const overduePayments = await this.paymentRepository.find({
+  //     where: {
+  //       status: PaymentStatus.TUNGGAKAN
+  //     }
+  //   });
 
-    console.log(overduePayments);
+  //   console.log(overduePayments);
 
 
-    const arrearsToInsert: Arrears[] = [];
-    console.log(arrearsToInsert);
+  //   const arrearsToInsert: Arrears[] = [];
+  //   console.log(arrearsToInsert);
 
-    for (const payment of overduePayments) {
+  //   for (const payment of overduePayments) {
       
-      const createdDate = new Date(payment.createdAt);
-      const range = Math.floor(
-        (today.getTime() - createdDate.getTime()) / (1000),
-      );
+  //     const createdDate = new Date(payment.createdAt);
+  //     const range = Math.floor(
+  //       (today.getTime() - createdDate.getTime()) / (1000),
+  //     );
 
-      console.log(range);
+  //     console.log(range);
 
-      if (range >= 10) {
-         const arrears = await this.arrearsRepository.findOne({
-           where: {
-             studentId: payment.studentId,
-             typeId: payment.typeId,
-           },
-         });
-        console.log(
-          `[CRON JOB] Payment #${payment.id} overdue (created at ${payment.createdAt}), moving to arrears`,
-        );
-        if (!arrears) {
-           const arrear = this.arrearsRepository.create({
-             studentId: payment.studentId,
-             typeId: payment.typeId,
-             amount: payment.amount,
-             dueDate: payment.createdAt,
-             status: 'TUNGGAKAN',
-             month: new Date().getMonth(),
-             semester: 5,
-             TA: `${new Date().getFullYear() + 1}/${new Date().getFullYear() + 2}`,
-            //  monthsInArrears: 2
-           });
-           arrearsToInsert.push(arrear);
-        }
+  //     if (range >= 10) {
+  //        const arrears = await this.arrearsRepository.findOne({
+  //          where: {
+  //            studentId: payment.studentId,
+  //            typeId: payment.typeId,
+  //          },
+  //        });
+  //       console.log(
+  //         `[CRON JOB] Payment #${payment.id} overdue (created at ${payment.createdAt}), moving to arrears`,
+  //       );
+  //       if (!arrears) {
+  //          const arrear = this.arrearsRepository.create({
+  //            studentId: payment.studentId,
+  //            typeId: payment.typeId,
+  //            amount: payment.amount,
+  //            dueDate: payment.createdAt,
+  //            status: 'TUNGGAKAN',
+  //            month: new Date().getMonth(),
+  //            semester: 5,
+  //            TA: `${new Date().getFullYear() + 1}/${new Date().getFullYear() + 2}`,
+  //           //  monthsInArrears: 2
+  //          });
+  //          arrearsToInsert.push(arrear);
+  //       }
        
 
-        // // update status payment
-        // payment.status = PaymentStatus.BELUM_LUNAS;
-        // await this.paymentRepository.save(payment);
-      }
-    }
-    // console.log(arrearsToInsert);
+  //       // // update status payment
+  //       // payment.status = PaymentStatus.BELUM_LUNAS;
+  //       // await this.paymentRepository.save(payment);
+  //     }
+  //   }
+  //   // console.log(arrearsToInsert);
 
-   if (arrearsToInsert.length > 0) {
-     await this.arrearsRepository.save(arrearsToInsert);
-     console.log(
-       `[CRON JOB] ${arrearsToInsert.length} payments moved to arrears ✅`,
-     );
-   } else {
-     console.log(`[CRON JOB] No payments to move this run`);
-   }
+  //  if (arrearsToInsert.length > 0) {
+  //    await this.arrearsRepository.save(arrearsToInsert);
+  //    console.log(
+  //      `[CRON JOB] ${arrearsToInsert.length} payments moved to arrears ✅`,
+  //    );
+  //  } else {
+  //    console.log(`[CRON JOB] No payments to move this run`);
+  //  }
 
-    return this._success({
-      auth: null,
-      data: arrearsToInsert,
-      errors: null,
-      links: { self: '/arrears/auto-move' },
-      included: null,
-      message: {
-        id: 'Pembayaran jatuh tempo dipindahkan ke tunggakan',
-        en: 'Overdue payments moved to arrears',
-      },
-    });
-  }
+  //   return this._success({
+  //     auth: null,
+  //     data: arrearsToInsert,
+  //     errors: null,
+  //     links: { self: '/arrears/auto-move' },
+  //     included: null,
+  //     message: {
+  //       id: 'Pembayaran jatuh tempo dipindahkan ke tunggakan',
+  //       en: 'Overdue payments moved to arrears',
+  //     },
+  //   });
+  // }
 }

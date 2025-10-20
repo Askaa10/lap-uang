@@ -194,7 +194,7 @@ export class PaymentService extends BaseResponse {
 
   async rekapBulanan(year: number) {
     const students = await this.studentRepo.find({
-      where : { isDelete: false },
+      where: {isDelete:false},
       relations: ['payments', 'payments.type'],
     });
 
@@ -206,7 +206,7 @@ export class PaymentService extends BaseResponse {
 
       // isi setiap kategori dengan default BELUM_LUNAS
       paymentTypes.forEach((type) => {
-        const key = snakeCase(type.name);
+        const key = snakeCase(type?.name);
         payments.push({
           category: key,
           status: 'BELUM_LUNAS',
@@ -215,7 +215,7 @@ export class PaymentService extends BaseResponse {
 
       // update status berdasarkan payment student
       student.payments.forEach((payment) => {
-        const key = snakeCase(payment.type.name);
+        const key = snakeCase(payment?.type?.name);
         const index = payments.findIndex((p) => p.category === key);
         if (index !== -1) {
           payments[index].status =
@@ -233,7 +233,7 @@ export class PaymentService extends BaseResponse {
       };
     });
 
-    return this._success({ data: result });
+    return this._success({ data:  result});
   }
   async remove(id: string) {
     const payment = await this.paymentRepo.findOne({ where: { id } });

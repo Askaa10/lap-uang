@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateSppPaymentDto {
@@ -23,9 +23,9 @@ export class CreateSppPaymentDto {
   @IsNotEmpty()
   month: string;
 
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  year: number;
+  year: string;
 
   @IsInt()
   @IsNotEmpty()

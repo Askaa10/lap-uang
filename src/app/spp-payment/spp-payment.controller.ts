@@ -20,7 +20,7 @@ export class SppPaymentController {
   }
 
   @Get('rekap/:year')
-  async getRekap(@Param('year') year: number) {
+  async getRekap(@Param('year') year: string) {
     return this.sppPaymentService.getSppRekap(year);
   }
 
@@ -29,9 +29,9 @@ export class SppPaymentController {
     return this.sppPaymentService.findAll();
   }
   
-  @Get("student/:id")
-  getByStudentId(@Param('id') studentID: string) {
-    return this.sppPaymentService.getByStudentId(studentID);
+  @Get("student/:id/:yearBefore/:yearNext")
+  getByStudentId(@Param('id') studentID: string , @Param('yearBefore') yearBefore: string, @Param('yearNext') yearNext: string) {
+    return this.sppPaymentService.getByStudentId(studentID, `${yearBefore}/${yearNext}`);
   }
 
   @Get(':id')
