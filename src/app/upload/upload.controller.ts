@@ -1,41 +1,43 @@
 import {
   Controller,
-  Delete,
-  HttpException,
-  HttpStatus,
-  Param,
   Post,
   Body,
-  UseInterceptors,
-  UploadedFile,
+  HttpException,
+  HttpStatus,
+  Delete,
+  Param,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { v2 as cloudinary } from 'cloudinary';
-import { Express } from 'express';
 
 @Controller('upload')
 export class UploadController {
   constructor(private readonly cloudinaryService: CloudinaryService) {}
 
+  // Upload via data URI / base64 string
   @Post('file/base64')
-  async uploadBase64(@Body() body: { fileBase64: string }) {
+  async uploadBase64(@Body() body: { fileBase64: string; publicId?: string }) {
     try {
-      const result = await this.cloudinaryService.uploadBase64(body.fileBase64);
+      const result = await this.cloudinaryService.uploadBase64(body.fileBase64, body.publicId);
       return { message: 'OK', data: result };
     } catch (err) {
       throw new HttpException('Ada Kesalahan', HttpStatus.BAD_REQUEST);
     }
   }
 
-  @Post('file')
-  @UseInterceptors(FileInterceptor('file')) // "file" = key form-data
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  // Upload via base64 (plain) dan decode menjadi Buffer lalu upload (tanpa Multer)
+  @Post('file/raw')
+  async uploadRaw(@Body() body: { base64: string; publicId?: string }) {
     try {
-      const result = await this.cloudinaryService.uploadFile(file);
+      if (!body || !body.base64) {
+        throw new HttpException('base64 is required', HttpStatus.BAD_REQUEST);
+      }
+      const base64 = body.base64.replace(/^data:.*;base64,/, '');
+      const buffer = Buffer.from(base64, 'base64');
+      const result = await this.cloudinaryService.uploadBuffer(buffer, body.publicId);
       return { message: 'OK', data: result };
     } catch (err) {
-      throw new HttpException('Ada Kesalahan Upload File', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Ada Kesalahan', HttpStatus.BAD_REQUEST);
     }
   }
 
