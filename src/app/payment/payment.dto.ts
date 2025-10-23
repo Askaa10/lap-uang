@@ -24,9 +24,9 @@ export class CreatePaymentDto {
 
 
 
-  // @IsOptional()
-  // @IsEnum(['LUNAS', 'BELUM LUNAS'])
-  // status?: PaymentStatus;
+  @IsOptional()
+  @IsEnum(['LUNAS', 'BELUM LUNAS'])
+  status?: PaymentStatus;
 
   @IsOptional()
   @IsNumber()

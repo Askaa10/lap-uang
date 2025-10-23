@@ -8,3 +8,7 @@ export enum StudentStatus {
   GRADUATION = 'GRADUATION',
   OUT = 'OUT',
 }
+export enum ProgramType {
+  FULLDAY = 'FULLDAY',
+  BOARDING = 'BOARDING',
+}

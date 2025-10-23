@@ -14,6 +14,8 @@ import { ExpenseModule } from './app/expense/expense.module';
 import { InitialBalanceModule } from './app/initial-balance/initial-balance.module';
 import { CloudinaryModule } from './app/cloudinary/cloudinary.module';
 import { UploadModule } from './app/upload/upload.module';
+import { SppPaymentModule } from './app/spp-payment/spp-payment.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -39,7 +41,8 @@ import { UploadModule } from './app/upload/upload.module';
     ExpenseModule,
     InitialBalanceModule,
     CloudinaryModule,
-    UploadModule,
+    SppPaymentModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],
