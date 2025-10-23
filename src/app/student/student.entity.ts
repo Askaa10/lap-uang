@@ -28,6 +28,8 @@ export class Student {
   @Column({ nullable: true })
   dorm: string;
 
+
+
   @Column()
   generation: number;
 

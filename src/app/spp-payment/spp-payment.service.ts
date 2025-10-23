@@ -1,7 +1,7 @@
 // spp-payment.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { SppPayment } from './spp-payment.entity';
 import { BaseResponse } from '../../utils/response/base.response';
 import { CreateSppPaymentDto, UpdateSppPaymentDto } from './spp-payment.dto';
@@ -18,7 +18,7 @@ export class SppPaymentService extends BaseResponse {
     super();
   }
 
-  async getSppRekap(year: string) {
+  async getSppRekap(yearBefore: string, yearNext: string) {
     // Ambil semua siswa
     const students = await this.studentRepo.find(
       {where : {isDelete : false}}
@@ -26,7 +26,7 @@ export class SppPaymentService extends BaseResponse {
 
     // Ambil semua pembayaran SPP tahun tertentu
     const payments = await this.sppPaymentRepository.find({
-      where: { year },
+      where: { year: Between(yearBefore, yearNext) },
       relations: ['student'],
     });
 
