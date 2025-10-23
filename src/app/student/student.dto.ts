@@ -37,3 +37,14 @@ export class CreateStudentDto {
 
 
 export class UpdateStudentDto extends PartialType(CreateStudentDto) {}
+
+export class CreatePaymentDto {
+  studentId: string;
+  month: number; // 1-12
+  year: number;
+  amount: number;
+  description?: string;
+  feeItem?: string; // optional, misal "SPP"
+}
+
+export type CreatePaymentBulkDto = CreatePaymentDto[];
