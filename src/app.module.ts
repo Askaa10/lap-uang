@@ -29,7 +29,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         return typeOrmConfig;
       },
     }),
-        // ScheduleModule.forRoot(),
+        ScheduleModule.forRoot(),
     
     AuthModule,
     MailModule,

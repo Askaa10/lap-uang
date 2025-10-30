@@ -28,8 +28,6 @@ export class Student {
   @Column({ nullable: true })
   dorm: string;
 
-
-
   @Column()
   generation: number;
 
@@ -43,7 +41,7 @@ export class Student {
   isDelete: boolean;
 
   @Column()
-  NIS: string;
+  NISN: string;
 
   // ✅ Kolom baru untuk tipe program
   @Column({ type: 'enum', enum: ProgramType })
@@ -63,4 +61,6 @@ export class Student {
 
   @OneToMany(() => SppPayment, (spp) => spp.student)
   spp: SppPayment[];
+
+  
 }

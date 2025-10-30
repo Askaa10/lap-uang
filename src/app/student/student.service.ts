@@ -83,7 +83,7 @@ export class StudentService extends BaseResponse {
     const toDelete: string[] = [];
 
     for (const student of students) {
-      const key = byNIS ? student.NIS : student.NISN;
+      const key = byNIS ? student.NISN : student.NISN;
       if (key && seen.has(key)) {
         // duplikat, tandai untuk dihapus
         toDelete.push(student.id);
@@ -142,7 +142,6 @@ export class StudentService extends BaseResponse {
       return {
         id: s.id,
         name: s.name,
-        NIS: s.NIS,
         NISN: s.NISN,
         dorm: s.dorm,
         generation: s.generation,

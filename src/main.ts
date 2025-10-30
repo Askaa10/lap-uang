@@ -6,7 +6,7 @@ import 'tsconfig-paths/register';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.enableCors({
-    origin: '*',
+    origin: ['http://localhost:3050', "*"],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
