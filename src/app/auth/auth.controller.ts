@@ -24,6 +24,7 @@ export class AuthController {
   async profile(@Param('id') id: string) {
     return await this.authService.myProfile(id);
   }
+  
   @Post('login')
   async login(@Body() userLogin: LoginDTO) {
     return await this.authService.login(userLogin);

@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { CreateStudentDto, UpdateStudentDto } from './student.dto';
@@ -47,5 +48,26 @@ export class StudentController {
   @Patch("updateStatusDelete/:id")
   updateStatusDelete(@Body() payload : any, @Param('id') id: string) {
     return this.studentService.updateStatusDelete(payload, id);
+  }
+
+  @Get('deduplicate')
+  async deduplicateStudent(@Body('byNIS') byNIS: boolean = true) {
+    // byNIS: true = cek duplikat berdasarkan NIS, false = cek berdasarkan NISN
+    const result = await this.studentService.deduplicate(byNIS);
+    return result;
+  }
+
+  // GET /student/spp?month=8&year=2025  -> seluruh data siswa dan pembayaran SPP di bulan tersebut
+  @Get('spp')
+  async getSppByMonth(@Query('month') month?: string, @Query('year') year?: string) {
+    const date = new Date();
+    const m = month ? parseInt(month, 10) : date.getMonth() + 1;
+    const y = year ? parseInt(year, 10) : undefined;
+    return this.studentService.getSppByMonth(m, y);
+  }
+
+  @Delete('deleteBulkSpp')
+  deleteBulkStudent(@Body('ids') ids: string[]) {
+    return this.studentService.deleteBulkStudent(ids);
   }
 }

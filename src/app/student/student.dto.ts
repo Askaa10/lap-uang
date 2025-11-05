@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
-import { Major, StudentStatus } from "./student.enum";
+import { Major, ProgramType, StudentStatus } from "./student.enum";
 import { PartialType } from "@nestjs/mapped-types";
 
 
@@ -22,6 +22,10 @@ export class CreateStudentDto {
   status: StudentStatus;
 
   @IsNotEmpty()
+  @IsEnum(ProgramType)
+  tipeProgram: ProgramType;
+
+  @IsNotEmpty()
   @IsString()
   dorm: string;
 
@@ -37,3 +41,14 @@ export class CreateStudentDto {
 
 
 export class UpdateStudentDto extends PartialType(CreateStudentDto) {}
+
+export class CreatePaymentDto {
+  studentId: string;
+  month: number; // 1-12
+  year: number;
+  amount: number;
+  description?: string;
+  feeItem?: string; // optional, misal "SPP"
+}
+
+export type CreatePaymentBulkDto = CreatePaymentDto[];

@@ -15,31 +15,25 @@ import { CreateSppPaymentDto, UpdateSppPaymentDto } from './spp-payment.dto';
 export class SppPaymentController {
   constructor(private readonly sppPaymentService: SppPaymentService) {}
 
-  @Post()
+  @Post('tambah')
   create(@Body() createDto: CreateSppPaymentDto) {
     return this.sppPaymentService.create(createDto);
   }
 
-  @Get('rekap/:year')
-  async getRekap(@Param('year') year: string) {
-    return this.sppPaymentService.getSppRekap(year);
+  @Get('rekap/:yearBefore/:yearNext')
+  async getRekap(@Param('yearBefore') yearBefore: string, @Param('yearNext') yearNext: string) {
+    return this.sppPaymentService.getSppRekap(yearBefore, yearNext);
   }
 
-  @Get()
+  @Get('semua')
   findAll() {
     return this.sppPaymentService.findAll();
-  }
 
-  @Get('student/:id/:yearBefore/:yearNext')
-  getByStudentId(
-    @Param('id') studentID: string,
-    @Param('yearBefore') yearBefore: string,
-    @Param('yearNext') yearNext: string,
-  ) {
-    return this.sppPaymentService.getByStudentId(
-      studentID,
-      `${yearBefore}/${yearNext}`,
-    );
+   }
+  
+  @Get("student/:id/:yearBefore/:yearNext")
+  getByStudentId(@Param('id') studentID: string , @Param('yearBefore') yearBefore: string, @Param('yearNext') yearNext: string) {
+    return this.sppPaymentService.getByStudentId(studentID, `${yearBefore}/${yearNext}`);
   }
 
   @Get('detail/:id')

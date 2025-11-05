@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Payment } from '../payment/payment.entity';
-import { Major, StudentStatus } from './student.enum';
+import { Major, ProgramType, StudentStatus } from './student.enum';
 
 import { SppPayment } from '../spp-payment/spp-payment.entity';
 import { Arrears } from '../arrear/arrear.entity';
@@ -30,18 +30,22 @@ export class Student {
 
   @Column()
   generation: number;
-  
+
   @Column({ type: 'enum', enum: StudentStatus, default: StudentStatus.ACTIVE })
   status: StudentStatus;
 
   @Column({ type: 'enum', enum: Major })
   major: Major;
 
-  @Column({default : false})
+  @Column({ default: false })
   isDelete: boolean;
 
   @Column()
-  NIS: string;
+  NISN: string;
+
+  // ✅ Kolom baru untuk tipe program
+  @Column({ type: 'enum', enum: ProgramType })
+  tipeProgram: ProgramType;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -58,4 +62,5 @@ export class Student {
   @OneToMany(() => SppPayment, (spp) => spp.student)
   spp: SppPayment[];
 
+  
 }
