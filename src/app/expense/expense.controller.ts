@@ -1,39 +1,51 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { CreateExpenseDto } from './expense.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  ParseBoolPipe,
+} from '@nestjs/common';
 import { ExpenseService } from './expense.service';
-// import { ExpenseCategory } from './expense.category.entity';
+import { CreateExpenseDto } from './expense.dto';
 
 @Controller('expense')
 export class ExpenseController {
-  constructor(private readonly expenseService: ExpenseService) {}
+  constructor(private readonly service: ExpenseService) {}
 
-  @Post('createMany')
-  async createExpenses(@Body() dtos: CreateExpenseDto[]) {
-    return this.expenseService.createMany(dtos);
+  @Post()
+  create(@Body() dto: CreateExpenseDto) {
+    return this.service.createExpense(dto);
   }
 
-  @Post('create')
-  async createExpense(@Body() dto: CreateExpenseDto) {
-    return this.expenseService.createExpense(dto);
+  @Get()
+  getAll() {
+    return this.service.getAll();
   }
 
-  @Get('')
-  async getAll() {
-    return this.expenseService.getAll();
-  }
   @Get(':id')
-  async getById(@Param('id') id: string) {
-    return this.expenseService.detailById(id);
+  detail(@Param('id') id: string) {
+    return this.service.detailById(id);
   }
 
-  @Post('updateExpense/:id')
-  async updateExpense(@Param('id') id: string, @Body() updateData: any) {
-    return this.expenseService.updateExpense(id, updateData);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: Partial<CreateExpenseDto>) {
+    return this.service.updateExpense(id, dto);
+  }
+
+  @Patch(':id/isdelete')
+  updateIsDelete(
+    @Param('id') id: string,
+    @Query('isDelete', ParseBoolPipe) isDelete: boolean,
+  ) {
+    return this.service.updateIsDelete(id, isDelete);
   }
 
   @Delete(':id')
-  async deleteExpense(@Param('id') id: string) {
-    return this.expenseService.deleteExpense(id);
+  delete(@Param('id') id: string) {
+    return this.service.deleteExpense(id);
   }
-
 }

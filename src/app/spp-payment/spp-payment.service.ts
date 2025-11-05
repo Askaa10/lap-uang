@@ -26,7 +26,7 @@ export class SppPaymentService extends BaseResponse {
 
     // Ambil semua pembayaran SPP tahun tertentu
     const payments = await this.sppPaymentRepository.find({
-      where: { year },
+      where: { year: `${Number(year)}/${Number(year) + 1}` },
       relations: ['student'],
     });
 

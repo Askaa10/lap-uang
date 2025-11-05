@@ -44,6 +44,7 @@
     "ioredis": "^5.7.0",
     "lodash": "^4.17.21",
     "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
     "mysql2": "^3.14.3",
     "openai": "^5.10.2",
     "passport": "^0.7.0",

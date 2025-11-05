@@ -171,9 +171,7 @@ export class PaymentService extends BaseResponse {
 
   async paymentsByCategory(kategoriName: string) {
     const payments = await this.paymentRepo.find({
-      where: { type: { name: kategoriName }, student:{
-        isDelete: false
-      } },
+      where: {},
       relations: ['student', 'type'],
     });
 

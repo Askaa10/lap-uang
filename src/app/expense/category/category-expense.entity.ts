@@ -1,10 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
-import { BudgetPlan } from '../budget-plant/budget-expense.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  OneToMany,
+} from 'typeorm';
+// import { BudgetPlan } from '../budget-plant/budget-expense.entity';
 import { Expense } from '../expense.entity';
+import { SubCategory } from '../sub-category/sub-cateogry.entity';
 // import { BudgetPlan } from './budget-plan.entity';
 // import { Expense } from './expense.entity';
 
-@Entity()
+@Entity('categoryex')
 export class CategoryExpense {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -12,16 +19,23 @@ export class CategoryExpense {
   @Column({ unique: true })
   name: string;
 
-  
   @Column()
-  decs: string;  
+  decs: string;
 
-  // @OneToMany(() => BudgetPlan, (plan) => plan.category)
-  // budgetPlans: BudgetPlan[];
+  @Column()
+  kode_kategori: string;
+
+  @Column({default:false})
+  isDelete: Boolean;
+
+  @OneToMany(() => SubCategory, (sub) => sub.category, {
+    onDelete: 'CASCADE',
+  })
+  subcategory: SubCategory;
 
   @OneToMany(() => Expense, (expense) => expense.category)
   expenses: Expense[];
 
-  @CreateDateColumn()
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 }
