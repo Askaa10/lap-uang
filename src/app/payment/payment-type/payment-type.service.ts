@@ -1,37 +1,62 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PaymentType } from './payment-type.entity';
 import { CreatePaymentTypeDto, UpdatePaymentTypeDto } from './payment-type.dto';
 import { BaseResponse } from '../../../utils/response/base.response';
+import { Student } from '../../student/student.entity'; // ✅ import Student
 
 @Injectable()
 export class PaymentTypeService extends BaseResponse {
   constructor(
     @InjectRepository(PaymentType)
     private readonly repo: Repository<PaymentType>,
+
+    @InjectRepository(Student)
+    private readonly studentRepo: Repository<Student>, // ✅ tambahkan repository Student
   ) {
     super();
   }
 
+  // ✅ saat membuat PaymentType baru, semua siswa otomatis ditambahkan
   async create(dto: CreatePaymentTypeDto) {
-    const paymentType = this.repo.create(dto);
-    const saved = await this.repo.save(paymentType);
-    return this._success({
-      auth: null,
-      data: saved,
-      errors: null,
-      links: { self: '/payment-types' },
-      included: null,
-      message: {
-        id: 'Berhasil dibuat',
-        en: 'Successfully created',
-      },
+    let students = [];
+  
+    console.log('👉 studentIds dari FE:', dto.studentIds);
+  
+    if (Array.isArray(dto.studentIds) && dto.studentIds.length > 0) {
+      // ✅ Ambil siswa berdasarkan ID yang dikirim
+      students = await this.studentRepo.findBy({
+        id: In(dto.studentIds),
+      });
+  
+      if (students.length === 0) {
+        throw new NotFoundException('Siswa tidak ditemukan untuk ID yang dikirim');
+      }
+    } else {
+      // ✅ Jika tidak dikirim, ambil semua siswa
+      console.log('⚠️ Tidak ada studentIds dikirim — otomatis ambil semua siswa');
+      students = await this.studentRepo.find(); // ambil semua siswa di database
+    }
+  
+    const paymentType = this.repo.create({
+      ...dto,
+      students,
     });
+  
+    const saved = await this.repo.save(paymentType);
+  
+    return {
+      success: true,
+      message: {
+        id: `Payment type berhasil dibuat untuk ${students.length} siswa`,
+        en: `Payment type created for ${students.length} students`,
+      },
+      data: saved,
+    };
   }
-
   async findAll() {
-    const types = await this.repo.find();
+    const types = await this.repo.find({ relations: ['students'] }); // ✅ tampilkan relasi students
     return this._success({
       auth: null,
       data: types,
@@ -46,7 +71,7 @@ export class PaymentTypeService extends BaseResponse {
   }
 
   async findOne(id: string) {
-    const found = await this.repo.findOne({ where: { id } });
+    const found = await this.repo.findOne({ where: { id }, relations: ['students'] }); // ✅ tampilkan siswa terkait
     if (!found) throw new NotFoundException('Payment type not found');
     return this._success({
       auth: null,

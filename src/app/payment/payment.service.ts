@@ -194,46 +194,46 @@ export class PaymentService extends BaseResponse {
 
   async rekapBulanan(year: number) {
     const students = await this.studentRepo.find({
-      where: {isDelete:false},
-      relations: ['payments', 'payments.type'],
+      where: { isDelete: false },
+      relations: ['payments', 'payments.type', 'paymentTypes'], // tambahkan relasi ke paymentTypes
     });
-
-    // ambil daftar kategori dari payment-type
-    const paymentTypes = await this.paymentTypeRepo.find();
-
+  
     const result = students.map((student) => {
       const payments: { category: string; status: string }[] = [];
-
-      // isi setiap kategori dengan default BELUM_LUNAS
-      paymentTypes.forEach((type) => {
+  
+      // 🔥 hanya ambil kategori yang dimiliki siswa ini
+      const studentTypes = student.paymentTypes || [];
+  
+      studentTypes.forEach((type) => {
         const key = snakeCase(type?.name);
-        payments.push({
-          category: key,
-          status: 'BELUM_LUNAS',
-        });
-      });
-
-      // update status berdasarkan payment student
-      student.payments.forEach((payment) => {
-        const key = snakeCase(payment?.type?.name);
-        const index = payments.findIndex((p) => p.category === key);
-        if (index !== -1) {
-          payments[index].status =
-            payment.status && payment.status == 'LUNAS'
+  
+        // default BELUM_LUNAS
+        let status = 'BELUM_LUNAS';
+  
+        // kalau siswa punya payment untuk kategori ini → update statusnya
+        const paid = student.payments.find(
+          (p) => p.type && snakeCase(p.type.name) === key,
+        );
+  
+        if (paid) {
+          status =
+            paid.status === 'LUNAS'
               ? 'LUNAS'
-              : payment.status == 'BELUM LUNAS'
+              : paid.status === 'BELUM LUNAS'
                 ? 'BELUM_LUNAS'
                 : 'TUNGGAKAN';
         }
+  
+        payments.push({ category: key, status });
       });
-
+  
       return {
         name: student.name,
         payments,
       };
     });
-
-    return this._success({ data:  result});
+  
+    return this._success({ data: result });
   }
   async remove(id: string) {
     const payment = await this.paymentRepo.findOne({ where: { id } });

@@ -5,12 +5,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import { Payment } from '../payment/payment.entity';
 import { Major, ProgramType, StudentStatus } from './student.enum';
 
 import { SppPayment } from '../spp-payment/spp-payment.entity';
 import { Arrears } from '../arrear/arrear.entity';
+import { PaymentType } from '../payment/payment-type/payment-type.entity';
 
 // Define or import the Major enum
 
@@ -63,4 +65,8 @@ export class Student {
 
   @OneToMany(() => SppPayment, (spp) => spp.student)
   spp: SppPayment[];
+
+  @ManyToMany(() => PaymentType, (paymentType) => paymentType.students)
+  paymentTypes: PaymentType[];
+
 }

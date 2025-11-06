@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinTable, ManyToMany } from 'typeorm';
 import { Payment } from '../payment.entity';
 import { Arrears } from '../../arrear/arrear.entity';
 import { CategoryTypes } from './payment-type.enum';
+import { Student } from 'src/app/student/student.entity';
 
 @Entity()
 export class PaymentType {
@@ -17,8 +18,7 @@ export class PaymentType {
   @Column()
   nominal: number;
 
-  @Column({ default: '' })
-  status: string;
+ 
   
   @Column({ default: '' })
   TA: string;
@@ -31,4 +31,8 @@ export class PaymentType {
 
   @OneToMany(() => Arrears, (arrear) => arrear.type)
   arrears: Arrears[];
+    // ✅ Relasi baru ke Student
+    @ManyToMany(() => Student, (student) => student.paymentTypes, { onDelete: 'CASCADE' })
+@JoinTable() // tabel pivot akan dibuat di sini
+students: Student[];
 }

@@ -30,9 +30,9 @@ export class Payment {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'studentId' })
-  student: Student;
+  student: Student;wd
 
-  @Column()
+  @Column({ type: 'datetime', nullable: true })
   date: Date;
 
   @Column({

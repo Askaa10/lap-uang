@@ -15,7 +15,7 @@ import { CreateStudentDto, UpdateStudentDto } from './student.dto';
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
-  @Get('')
+  @Get('all')
   async getAllStudents() {
     return this.studentService.getAll();
   }
