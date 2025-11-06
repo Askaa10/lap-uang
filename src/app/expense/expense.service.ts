@@ -46,7 +46,24 @@ export class ExpenseService extends BaseResponse {
    */
   async createMany(dtos: CreateExpenseDto[]) {
     const entities = this.expenseRepo.create(
-      dtos.map((d) => ({ ...d, isDelete: false })),
+      dtos.map((d: any) =>
+        this.expenseRepo.create({
+          categoryId: d.categoryId,
+          PayDate: new Date(),
+          pihakPenerima: d.pihakPenerima,
+          PenanggungJawab: d.PenanggungJawab,
+          itemCount: d.itemCount,
+          Prioritas: d.Prioritas ?? 'BIASA', // fallback default
+          sumber_dana: d.sumber_dana,
+          ukuran: d.ukuran,
+          satuanUkuran: d.satuanUkuran,
+          kwitansiUrl: d.kwitansiUrl,
+          amount: d.amount,
+          description: d.description,
+          isDelete: false,
+          createdAt: new Date(),
+        }),
+      ),
     );
     const saved = await this.expenseRepo.save(entities);
     return this._success({ data: saved });

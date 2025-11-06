@@ -43,6 +43,14 @@ export class SubCategoryController {
   async create(@Body() dto: CreateSubCategoryDto) {
     return this.service.create(dto);
   }
+  /**
+   * ✅ POST /subcategory/bulk
+   * Buat banyak subcategory sekaligus
+   */
+  @Post('/create/bulk')
+  async createBulk(@Body() dtos: CreateSubCategoryDto[]) {
+    return this.service.createBulk(dtos);
+  }
 
   /**
    * ✅ PATCH /subcategory/:id

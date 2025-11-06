@@ -25,8 +25,8 @@ export class SubCategory {
   @Column({ type: 'varchar', nullable: true })
   category_id?: string;
 
-  @Column({ type: 'varchar', length: 100 })
-  expense_id?: string;
+  // @Column({ type: 'varchar', length: 100 })
+  // expense_id?: string;
   //   // Relasi ke Category
   @ManyToOne(() => CategoryExpense, (category) => category.subcategory, {
     onDelete: 'CASCADE',

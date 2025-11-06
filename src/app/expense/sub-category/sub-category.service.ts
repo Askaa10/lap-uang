@@ -25,7 +25,7 @@ export class SubCategoryService extends BaseResponse {
   /**
    * ✅ Get all SubCategories (with optional filter & search)
    */
-  async getAll(query?:any ) {
+  async getAll(query?: any) {
     const { search, category_id } = query || {};
 
     const where: any = {};
@@ -91,12 +91,71 @@ export class SubCategoryService extends BaseResponse {
       description: dto.description,
       category,
       category_id: dto.category_id,
-      expense_id: dto.expense_id || null,
+      // expense_id: dto.expense_id || null,
       isDelete: false,
     });
 
     const data = await this.subRepo.save(entity);
     return this._success({ data });
+  }
+  /**
+   * ✅ Create Bulk SubCategory
+   */
+  async createBulk(dtos: CreateSubCategoryDto[]) {
+    if (!Array.isArray(dtos) || dtos.length === 0) {
+      throw new BadRequestException(
+        'Payload harus berupa array dan tidak boleh kosong',
+      );
+    }
+
+    const results = [];
+
+    for (const dto of dtos) {
+      const category = await this.catRepo.findOne({
+        where: { id: dto.category_id },
+      });
+
+      if (!category) {
+        throw new NotFoundException(
+          `Category dengan id ${dto.category_id} tidak ditemukan`,
+        );
+      }
+
+      // Cek apakah sudah ada subkategori dengan nama sama di kategori yang sama
+      const exists = await this.subRepo.findOne({
+        where: {
+          name: dto.name,
+          category: { id: dto.category_id },
+          isDelete: false,
+        },
+      });
+
+      if (exists) {
+        // skip duplikat agar tidak error tapi beri tahu user
+        console.warn(`⚠️ SubCategory "${dto.name}" sudah ada, dilewati.`);
+        continue;
+      }
+
+      const entity = this.subRepo.create({
+        name: dto.name,
+        description: dto.description,
+        category,
+        category_id: dto.category_id,
+        // expense_id: dto.expense_id || null,
+        isDelete: false,
+      });
+
+      const data = await this.subRepo.save(entity);
+      results.push(data);
+    }
+
+    return this._success({
+      data: results,
+      message: {
+        en: 'Bulk SubCategory created successfully',
+        id: 'SubKategori berhasil ditambahkan secara massal',
+      },
+    });
   }
 
   /**
