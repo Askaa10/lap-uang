@@ -30,8 +30,6 @@ export class Student {
   @Column({ nullable: true })
   dorm: string;
 
-
-
   @Column()
   generation: number;
 
@@ -44,8 +42,8 @@ export class Student {
   @Column({ default: false })
   isDelete: boolean;
 
-  @Column()
-  NIS: string;
+   @Column({ unique: true})
+  NISN: string;
 
   // ✅ Kolom baru untuk tipe program
   @Column({ type: 'enum', enum: ProgramType })
@@ -68,5 +66,7 @@ export class Student {
 
   @ManyToMany(() => PaymentType, (paymentType) => paymentType.students)
   paymentTypes: PaymentType[];
+
+  
 
 }

@@ -10,6 +10,7 @@ import { Payment } from '../payment/payment.entity';
     TypeOrmModule.forFeature([Student,Payment]),
   ],
   providers: [StudentService],
-  controllers: [StudentController]
+  controllers: [StudentController],
+  exports: [TypeOrmModule],
 })
 export class StudentModule {}
