@@ -44,7 +44,7 @@ export class PaymentController {
   }
   @Get('/category/:name')
   async findByCategory(@Param('name') name: string) {
-    return this.paymentService.paymentsByCategory(name);
+    return await this.paymentService.paymentsByCategory(name);
   }
 
   @Get('detail/:id')

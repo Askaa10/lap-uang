@@ -6,16 +6,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Expense } from './expense.entity';
 import { CategoryExpense } from './category/category-expense.entity';
 import { CategoryExpenseService } from './category/category-expense.service';
-import { BudgetPlan } from './budget-plant/budget-expense.entity';
-import { BudgetExpenseService } from './budget-plant/budget-expense.service';
+
 import { CategoryExpenseController } from './category/caetegory-expense.controller';
-import { BudgetExpenseController } from './budget-plant/budget-expense.controller';
+
 // import { ExpenseCategory } from './expense.category.entity';
+import { SubCategoryService } from './sub-category/sub-category.service';
+import { SubCategoryController } from './sub-category/sub-category.controller';
+import { SubCategory } from './sub-category/sub-cateogry.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Expense, CategoryExpense,BudgetPlan])],
-  providers: [ExpenseService, CategoryExpenseService,BudgetExpenseService],
-  controllers: [ExpenseController,CategoryExpenseController,BudgetExpenseController],
+  imports: [TypeOrmModule.forFeature([Expense, CategoryExpense, SubCategory])],
+  providers: [ExpenseService, CategoryExpenseService, SubCategoryService],
+  controllers: [ExpenseController,CategoryExpenseController, SubCategoryController],
   exports: [ExpenseService], // jika dipakai di module lain
 })
 export class ExpenseModule {}

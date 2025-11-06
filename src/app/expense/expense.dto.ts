@@ -1,14 +1,14 @@
 import { Expense } from './expense.entity';
 
-
-
 import {
   IsNotEmpty,
   IsUUID,
   IsDateString,
   IsNumber,
   IsString,
+  IsOptional,
 } from 'class-validator';
+import { Prioritas } from './sub-category/sub-category.enum';
 
 export class CreateExpenseDto {
   @IsNotEmpty({ message: 'Kategori wajib dipilih' })
@@ -17,7 +17,7 @@ export class CreateExpenseDto {
 
   @IsNotEmpty({ message: 'Tanggal wajib diisi' })
   @IsDateString({}, { message: 'Format tanggal tidak valid' })
-  date: Date;
+  payDate: Date;
 
   @IsNotEmpty({ message: 'Jumlah wajib diisi' })
   @IsNumber()
@@ -25,11 +25,31 @@ export class CreateExpenseDto {
 
   @IsNotEmpty({ message: 'Penerima wajib diisi' })
   @IsString()
-  userPm: string;
+  pihakPenerima: string;
+
+  @IsNotEmpty({ message: 'Sumber Dana wajib diisi' })
+  @IsString()
+  sumber_dana: string;
+  
+  @IsNotEmpty({ message: 'Penanggung jawab wajib diisi' })
+  @IsString()
+  penanggungJawab: string;
 
   @IsNotEmpty({ message: 'Jumlah item wajib diisi' })
   @IsString()
   itemCount: string;
+
+  @IsNotEmpty({ message: 'ukuran wajib diisi' })
+  @IsString()
+  ukuran: string;
+
+  @IsNotEmpty({ message: 'satuan ukuran wajib diisi' })
+  @IsString()
+  satuanUkuran: string;
+
+  @IsNotEmpty({ message: 'prioritas wajib diisi' })
+  @IsString()
+  Prioritas: Prioritas;
 
   @IsNotEmpty({ message: 'Link kwitansi wajib diisi' })
   @IsString()
@@ -38,6 +58,11 @@ export class CreateExpenseDto {
   @IsNotEmpty({ message: 'Deskripsi wajib diisi' })
   @IsString()
   description: string;
+
+  @IsOptional({ message: 'De wajib diisi' })
+  @IsString()
+  isDelete: string;
+  
 }
 
 export class ExpenseDto {

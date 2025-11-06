@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { SppPaymentService } from './spp-payment.service';
 import { CreateSppPaymentDto, UpdateSppPaymentDto } from './spp-payment.dto';
@@ -36,7 +37,7 @@ export class SppPaymentController {
     return this.sppPaymentService.getByStudentId(studentID, `${yearBefore}/${yearNext}`);
   }
 
-  @Get(':id')
+  @Get('detail/:id')
   findOne(@Param('id') id: string) {
     return this.sppPaymentService.findOne(id);
   }

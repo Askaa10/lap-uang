@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { BaseResponse } from "src/utils/response/base.response";
 import { CategoryExpense } from './category-expense.entity';
 import { Repository } from 'typeorm';
-import { CreateCategoryDto } from './category-expense.dto';
+import { CreateCategoryExpenseDto } from './category-expense.dto';
 
 @Injectable()
 export class CategoryExpenseService extends BaseResponse {
@@ -12,7 +12,6 @@ export class CategoryExpenseService extends BaseResponse {
         private readonly repo: Repository<CategoryExpense>,
     ) {
         super();
-
     }
 
     async getAll(){
@@ -20,12 +19,12 @@ export class CategoryExpenseService extends BaseResponse {
         return this._success({ data , links: { self: '/expense-category' } });
     }
 
-    async create(dto: CreateCategoryDto) {
+    async create(dto: CreateCategoryExpenseDto) {
         const data = await this.repo.save(dto);
         return this._success({ data });
     }
 
-    async createBulk(dtos: CreateCategoryDto[]) {
+    async createBulk(dtos: CreateCategoryExpenseDto[]) {
         const data = await this.repo.save(dtos);
         return this._success({ data });
     }
@@ -35,7 +34,7 @@ export class CategoryExpenseService extends BaseResponse {
         return this._success({ data });
     }
 
-    async update(id: string, dto: CreateCategoryDto) {
+    async update(id: string, dto: CreateCategoryExpenseDto) {
         const data = await this.repo.update(id, dto);
         return this._success({ data });
     }

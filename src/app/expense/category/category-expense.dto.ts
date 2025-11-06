@@ -1,16 +1,29 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 
-export class CreateCategoryDto {
-  @IsNotEmpty({ message: 'Nama kategori wajib diisi' })
+export class CreateCategoryExpenseDto {
   @IsString()
+  @IsNotEmpty()
+  @Length(1, 100)
   name: string;
 
-
-  @IsNotEmpty({ message: 'Keterangan wajib diisi' })
   @IsString()
+  @IsNotEmpty()
   decs: string;
 
+  @IsString()
+  @IsNotEmpty()
+  kode_kategori: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isDelete?: boolean;
 }
 
-export class UpdateCategoryDto extends PartialType(CreateCategoryDto) {}
+export class UpdateCategoryDto extends PartialType(CreateCategoryExpenseDto) {}

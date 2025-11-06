@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { CategoryExpenseService } from './category-expense.service';
-import { CreateCategoryDto, UpdateCategoryDto } from './category-expense.dto';
+import { CreateCategoryExpenseDto, UpdateCategoryDto } from './category-expense.dto';
 
 @Controller('expense-category')
 export class CategoryExpenseController {
@@ -13,12 +13,12 @@ export class CategoryExpenseController {
   }
 
   @Post('create')
-  async create(@Body() dto: CreateCategoryDto) {
+  async create(@Body() dto: CreateCategoryExpenseDto) {
     return this.ces.create(dto);
   }
 
   @Post('create/bulk')
-  async createBulk(@Body() dtos: CreateCategoryDto[]) {
+  async createBulk(@Body() dtos: CreateCategoryExpenseDto[]) {
     return this.ces.createBulk(dtos);
   }
 

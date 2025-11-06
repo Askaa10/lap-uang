@@ -33,6 +33,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     
     AuthModule,
     MailModule,
+    SppPaymentModule,
     SchoolProfileModule,
     StudentModule,
     PaymentModule,

@@ -10,7 +10,7 @@ import {
 import { User } from './user.entity';
 
 
-@Entity()
+@Entity('resetpassword')
 export class ResetPassword {
   @PrimaryGeneratedColumn('uuid')
   id: string;
