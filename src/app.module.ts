@@ -26,7 +26,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     TypeOrmModule.forRootAsync({
       useFactory: async () => {
         const { typeOrmConfig } = await import('./config/typeorm.config');
-        return typeOrmConfig;
+        return { ...typeOrmConfig, synchronize: true };
       },
     }),
         ScheduleModule.forRoot(),
