@@ -17,6 +17,10 @@ export class CreatePaymentTypeDto {
   @IsInt()
   @IsOptional()
   semester: number;
+
+  @IsString()
+  @IsOptional()
+  status: string;
   
   @IsInt()
   @IsOptional()

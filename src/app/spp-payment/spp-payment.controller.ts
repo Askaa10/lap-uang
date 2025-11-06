@@ -26,6 +26,7 @@ export class SppPaymentController {
   }
 
   @Get('semua')
+
   findAll() {
     return this.sppPaymentService.findAll();
 

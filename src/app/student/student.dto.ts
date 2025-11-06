@@ -31,7 +31,7 @@ export class CreateStudentDto {
 
   @IsNotEmpty()
   @IsString()
-  NIS: string;
+  NISN: string;
 
   @IsNotEmpty()
   @IsEnum(Major) // ✅ Pastikan sesuai enum
