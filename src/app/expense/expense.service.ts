@@ -49,9 +49,9 @@ export class ExpenseService extends BaseResponse {
       dtos.map((d: any) =>
         this.expenseRepo.create({
           categoryId: d.categoryId,
-          PayDate: new Date(),
+          PayDate: d?.PayDate || new Date(),
           pihakPenerima: d.pihakPenerima,
-          PenanggungJawab: d.PenanggungJawab,
+          PenanggungJawab: d?.PenanggungJawab,
           itemCount: d.itemCount,
           Prioritas: d.Prioritas ?? 'BIASA', // fallback default
           sumber_dana: d.sumber_dana,
