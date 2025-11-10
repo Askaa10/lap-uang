@@ -6,9 +6,12 @@ import { Student } from '../student/student.entity';
 import { PaymentType } from '../payment/payment-type/payment-type.entity';
 import { Arrears } from './arrear.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { BaseResponse } from 'src/utils/response/base.response';
+import { Length } from 'class-validator';
+import { Payment, PaymentStatus } from '../payment/payment.entity';
 
 @Injectable()
-export class ArrearsService {
+export class ArrearsService extends BaseResponse {
   private readonly logger = new Logger(ArrearsService.name);
 
   constructor(
@@ -21,9 +24,14 @@ export class ArrearsService {
     @InjectRepository(Student)
     private readonly studentRepository: Repository<Student>,
 
+    @InjectRepository(Payment)
+    private readonly paymentRepository: Repository<Payment>,
+
     @InjectRepository(PaymentType)
     private readonly paymentTypeRepository: Repository<PaymentType>,
-  ) {}
+  ) {
+    super();
+  }
 
   // 🔹 Generate tunggakan dari spp_payments yang belum lunas
   async createMonthlyArrearsForAllStudents(): Promise<string> {
@@ -52,7 +60,9 @@ export class ArrearsService {
           typeId: null, // kalau belum ada, bisa diisi manual
           status: 'BELUM_LUNAS',
           amount: payment.nominal,
-          dueDate: new Date(`${payment.year}-${this.getMonthNumber(payment.month)}-10`),
+          dueDate: new Date(
+            `${payment.year}-${this.getMonthNumber(payment.month)}-10`,
+          ),
           month: this.getMonthNumber(payment.month),
           semester: this.getSemester(payment.month),
           TA: payment.year,
@@ -69,6 +79,46 @@ export class ArrearsService {
     return 'Tunggakan berhasil diperbarui.';
   }
 
+  async PayArrers(NISN: string, arrearsID: string) {
+    const arrears = await this.arrearsRepository.findOne({
+      where: {
+        id: arrearsID,
+        student: {
+          NISN: NISN,
+        },
+      },
+    });
+    if (arrears) {
+      const typePayment = await this.paymentTypeRepository.findOne({
+        where: {
+          id: arrears.typeId,
+        },
+      });
+
+      const prePayment = {
+        studentId: arrears.studentId,
+        date: new Date(),
+        amount: Number(arrears.amount),
+        method: typePayment.type,
+        month: new Date().getMonth(),
+        year: new Date().getFullYear(),
+        typeId: typePayment.id,
+        status: PaymentStatus.LUNAS
+      };
+
+      await this.paymentRepository.save(prePayment);
+      await this.arrearsRepository.delete({
+        id: arrears.id
+      });
+
+      return this._success({
+        data: {
+          prePayment,
+        },
+      });
+    }
+  }
+
   // 🔹 Ambil daftar tunggakan semua siswa
   async getAllArrears(): Promise<Arrears[]> {
     return this.arrearsRepository.find({
@@ -78,9 +128,9 @@ export class ArrearsService {
   }
 
   // 🔹 Ambil tunggakan per siswa
-  async getArrearsByStudent(studentId: string): Promise<Arrears[]> {
+  async getArrearsByStudent(NISN: string): Promise<Arrears[]> {
     return this.arrearsRepository.find({
-      where: { studentId },
+      where: { student: { NISN: NISN } },
       relations: ['student', 'type'],
     });
   }
@@ -88,8 +138,18 @@ export class ArrearsService {
   // 🔹 Helper untuk ubah nama bulan → angka
   private getMonthNumber(monthName: string): number {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return months.indexOf(monthName) + 1;
   }
@@ -100,9 +160,8 @@ export class ArrearsService {
     return month >= 1 && month <= 6 ? 2 : 1;
   }
 
-
   // // ✅ CRON jalan tiap tanggal 1 jam 00:00
-  // @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)// 
+  // @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)//
   // ✅ CRON jalan tiap setiap 1 menit
   @Cron(CronExpression.EVERY_MINUTE)
   async generateMonthlyArrears() {
@@ -146,7 +205,14 @@ export class ArrearsService {
           },
         });
 
-        if (!existing) {
+        const existingPayment = await this.paymentRepository.findOne({
+          where: {
+            studentId: student.id,
+            typeId: type.id,
+            year
+        }})
+
+        if (!existing && !existingPayment) {
           const newArrear = this.arrearsRepository.create({
             studentId: student.id,
             typeId: type.id,
@@ -167,4 +233,3 @@ export class ArrearsService {
     this.logger.log(`[CRON] ✅ Created ${createdCount} arrears`);
   }
 }
-

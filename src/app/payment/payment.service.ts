@@ -34,6 +34,18 @@ export class PaymentService extends BaseResponse {
       data: saved,
     };
   }
+  async getListPaymentSuccessByStudent(stdID: string) {
+    const payment = await this.paymentRepo.find({
+      where: {
+        studentId: stdID,
+        status: PaymentStatus.LUNAS,
+      },
+    });
+
+    return this._success({
+      data: payment,
+    });
+  }
 
   async createBulk(dtos: CreatePaymentDto[]) {
     const payments = this.paymentRepo.create(dtos);
@@ -192,7 +204,7 @@ export class PaymentService extends BaseResponse {
 
   async rekapBulanan(year: number) {
     const students = await this.studentRepo.find({
-      where: {isDelete:false},
+      where: { isDelete: false },
       relations: ['payments', 'payments.type'],
     });
 
@@ -231,7 +243,7 @@ export class PaymentService extends BaseResponse {
       };
     });
 
-    return this._success({ data:  result});
+    return this._success({ data: result });
   }
   async remove(id: string) {
     const payment = await this.paymentRepo.findOne({ where: { id } });

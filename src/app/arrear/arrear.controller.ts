@@ -14,9 +14,13 @@ export class ArrearsController {
   async getAll() {
     return this.arrearsService.getAllArrears();
   }
-
-  @Get('student/:id')
-  async getByStudent(@Param('id') studentId: string) {
-    return this.arrearsService.getArrearsByStudent(studentId);
+  @Post('/bayar/:id/:NISN')
+  async bayarTunggakan(@Param("NISN") NISN: string, @Param("id") id:string) {
+    return this.arrearsService.PayArrers(NISN, id)
+  }
+  
+  @Get('student/:NISN')
+  async getByStudent(@Param('NISN') NISN: string) {
+    return this.arrearsService.getArrearsByStudent(NISN);
   }
 }
