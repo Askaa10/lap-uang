@@ -75,7 +75,7 @@ export class ExpenseService extends BaseResponse {
   async getAll() {
     const expenses = await this.expenseRepo.find({
       where: { isDelete: false },
-      relations: ['category'],
+      relations: ['category', "subCategory  "],
       order: { createdAt: 'DESC' },
     });
     return this._success({ data: expenses });
