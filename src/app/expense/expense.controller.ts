@@ -20,6 +20,14 @@ export class ExpenseController {
   create(@Body() dto: CreateExpenseDto) {
     return this.service.createExpense(dto);
   }
+  /**
+   * ✅ POST /expense/bulk
+   * Create multiple expense records at once
+   */
+  @Post('bulk')
+  async createMany(@Body() dtos: CreateExpenseDto[]) {
+    return this.service.createMany(dtos);
+  }
 
   @Get()
   getAll() {

@@ -42,7 +42,7 @@ export class Student {
   @Column({ default: false })
   isDelete: boolean;
 
-   @Column({ unique: true})
+  @Column({ unique: false})
   NISN: string;
 
   // ✅ Kolom baru untuk tipe program
