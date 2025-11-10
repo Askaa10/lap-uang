@@ -28,6 +28,11 @@ export class PaymentController {
     return this.paymentService.getGroupedPaymentsByStudent(typeId);
   }
 
+  @Get("/list/payment/siswa/done/:id")
+  async getListPaymentDone(@Param("id") id:string) {
+    return await this.paymentService.getListPaymentSuccessByStudent(id)
+    }
+
   @Post('Bulk')
   createBulk(@Body() dtos: CreatePaymentDto[]) {
     return this.paymentService.createBulk(dtos);

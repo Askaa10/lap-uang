@@ -18,9 +18,10 @@ export class PaymentType {
   @Column()
   nominal: number;
 
- 
+  @Column({ default: 'ACTIVE' })
+  status: string;
   
-  @Column({ default: '' })
+  @Column({ default: '2025/2026' })
   TA: string;
 
   @Column({ default: 'NORMAL' })
