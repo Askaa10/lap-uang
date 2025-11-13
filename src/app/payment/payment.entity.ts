@@ -6,11 +6,12 @@ import {
   ManyToOne,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Student } from '../student/student.entity';
 import { Receipt } from '../receipts/receipt.entity';
 import { PaymentType } from './payment-type/payment-type.entity';
-
+import { PaymentHistory } from './payment-history/payment-history.entity';
 
 export enum PaymentStatus {
   BELUM_LUNAS = 'BELUM LUNAS',
@@ -65,6 +66,8 @@ export class Payment {
   @ManyToOne(() => PaymentType, (type) => type.payments)
   @JoinColumn({ name: 'typeId' })
   type: PaymentType;
+  @OneToMany(() => PaymentHistory, history => history.payment, { cascade: true })
+histories: PaymentHistory[];
 
   @Column()
   typeId: string;

@@ -183,25 +183,28 @@ export class PaymentService extends BaseResponse {
 
   async paymentsByCategory(kategoriName: string) {
     const payments = await this.paymentRepo.find({
-      where: {},
+      where: {
+        type: {
+          name: kategoriName,
+        },
+      },
       relations: ['student', 'type'],
     });
-
-    return this._success({
-      data: payments,
-    });
+  
+    return this._success({ data: payments });
   }
 
-  async getPaymentsByCNS(ids: string, idc: string) {
-    const Payment = await this.paymentRepo.find({
-      where: { studentId: ids, typeId: idc },
+  async getPaymentsByCNS(studentId: string, typeId: string) {
+    const payment = await this.paymentRepo.findOne({
+      where: {
+        student: { id: studentId },
+        type: { id: typeId },
+      },
+      relations: ['student', 'type'],
     });
-
-    return this._success({
-      data: Payment,
-    });
+  
+    return this._success({ data: payment });
   }
-
   async rekapBulanan(year: number) {
     const students = await this.studentRepo.find({
       where: { isDelete: false },

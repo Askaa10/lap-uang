@@ -3,6 +3,7 @@ import { Payment } from '../payment.entity';
 import { Arrears } from '../../arrear/arrear.entity';
 import { CategoryTypes } from './payment-type.enum';
 import { Student } from 'src/app/student/student.entity';
+import { PaymentHistory } from '../payment-history/payment-history.entity';
 
 @Entity()
 export class PaymentType {
@@ -36,4 +37,6 @@ export class PaymentType {
     @ManyToMany(() => Student, (student) => student.paymentTypes, { onDelete: 'CASCADE' })
 @JoinTable() // tabel pivot akan dibuat di sini
 students: Student[];
+
+
 }
