@@ -256,6 +256,8 @@ export class PaymentService extends BaseResponse {
               ? 'BELUM_LUNAS'
               : 'TUNGGAKAN';
         }
+  
+        payments.push({ category: key, status });
       });
 
       return { name: student.name, payments };

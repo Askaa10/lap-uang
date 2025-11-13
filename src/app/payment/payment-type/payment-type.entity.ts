@@ -1,6 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinTable, ManyToMany } from 'typeorm';
 import { Payment } from '../payment.entity';
 import { CategoryTypes } from './payment-type.enum';
+import { Student } from 'src/app/student/student.entity';
+
 
 @Entity()
 export class PaymentType {
@@ -27,5 +29,8 @@ export class PaymentType {
 
   @OneToMany(() => Payment, (payment) => payment.type)
   payments: Payment[];
+
+  @ManyToMany(() => Student, (student) => student.paymentTypes)
+  students: Student[];
 
 }

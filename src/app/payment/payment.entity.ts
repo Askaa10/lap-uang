@@ -6,10 +6,12 @@ import {
   ManyToOne,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Student } from '../student/student.entity';
 import { Receipt } from '../receipts/receipt.entity';
 import { PaymentType } from './payment-type/payment-type.entity';
+import { PaymentHistory } from './payment-history/payment-history.entity';
 
 export enum PaymentStatus {
   BELUM_LUNAS = 'BELUM LUNAS',
@@ -32,7 +34,7 @@ export class Payment {
   @JoinColumn({ name: 'studentId' })
   student: Student;
 
-  @Column()
+  @Column({ type: 'datetime', nullable: true })
   date: Date;
 
   @Column({
@@ -63,18 +65,26 @@ export class Payment {
   @CreateDateColumn()
   createdAt: Date;
 
-  // ✅ FIXED: cukup relasi ini saja, jangan pakai @Column() tambahan
+  // -------------- FIX: RELASI PAYMENT TYPE --------------
   @ManyToOne(() => PaymentType, (type) => type.payments, {
-    nullable: false, // wajib isi typeId
+    nullable: false,
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'typeId' })
   type: PaymentType;
+  // -> Tidak perlu @Column('typeId'), TypeORM bikin otomatis
 
+  // -------------- FIX: RELASI PAYMENT HISTORY --------------
+  @OneToMany(() => PaymentHistory, (history) => history.payment, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  histories: PaymentHistory[];
+  // -> Payment HAS MANY history, bukan many-to-one
 
   @Column()
-  remainder : number;
+  remainder: number;
 
   @Column()
-  paid : number;
+  paid: number;
 }

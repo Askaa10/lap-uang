@@ -16,6 +16,11 @@ export class PaymentTypeController {
     return this.service.findAll();
   }
 
+  @Get('with-status')
+  findAllWithStatus() {
+    return this.service.findAllWithPaymentStatus();
+  }
+
   @Get('detail/:id')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);

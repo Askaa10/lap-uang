@@ -1,13 +1,16 @@
 import {
+  IsArray,
   IsBoolean,
   IsEnum,
   IsInt,
   IsOptional,
+  IsPositive,
   isString,
   IsString,
   MinLength,
 } from 'class-validator';
 import { CategoryTypes } from './payment-type.enum';
+import { Type } from 'class-transformer';
 
 export class CreatePaymentTypeDto {
   @IsString()
@@ -33,6 +36,11 @@ export class CreatePaymentTypeDto {
   @IsEnum(CategoryTypes)
   @IsOptional()
   type: CategoryTypes;
+  
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  studentIds?: number[];
 }
 
 export class UpdatePaymentTypeDto {
@@ -45,6 +53,11 @@ export class UpdatePaymentTypeDto {
   @IsOptional()
   semester?: number;
 
+  @IsString()
+  @IsOptional()
+  status: string;
+  
+
   @IsInt()
   @IsOptional()
   nominal: number;
@@ -56,4 +69,9 @@ export class UpdatePaymentTypeDto {
   @IsEnum(CategoryTypes)
   @IsOptional()
   type?: CategoryTypes;
+  
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  studentIds?: number[];
 }

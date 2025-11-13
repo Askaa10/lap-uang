@@ -1,37 +1,123 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PaymentType } from './payment-type.entity';
 import { CreatePaymentTypeDto, UpdatePaymentTypeDto } from './payment-type.dto';
 import { BaseResponse } from '../../../utils/response/base.response';
+import { Student } from '../../student/student.entity'; // ✅ import Student
+import { Payment } from '../payment.entity';
 
 @Injectable()
 export class PaymentTypeService extends BaseResponse {
   constructor(
     @InjectRepository(PaymentType)
     private readonly repo: Repository<PaymentType>,
+
+    @InjectRepository(Student)
+    private readonly studentRepo: Repository<Student>, // ✅ tambahkan repository Student
+
+    @InjectRepository(Payment)
+    private readonly paymentRepo: Repository<Payment>,
   ) {
     super();
   }
 
+  // ✅ saat membuat PaymentType baru, semua siswa otomatis ditambahkan
   async create(dto: CreatePaymentTypeDto) {
-    const paymentType = this.repo.create(dto);
+    let students = [];
+  
+    console.log('👉 studentIds dari FE:', dto.studentIds);
+  
+    if (Array.isArray(dto.studentIds) && dto.studentIds.length > 0) {
+      // ✅ Ambil siswa berdasarkan ID yang dikirim
+      students = await this.studentRepo.findBy({
+        id: In(dto.studentIds),
+      });
+  
+      if (students.length === 0) {
+        throw new NotFoundException('Siswa tidak ditemukan untuk ID yang dikirim');
+      }
+    } else {
+      // ✅ Jika tidak dikirim, ambil semua siswa
+      console.log('⚠️ Tidak ada studentIds dikirim — otomatis ambil semua siswa');
+      students = await this.studentRepo.find(); // ambil semua siswa di database
+    }
+  
+    const paymentType = this.repo.create({
+      ...dto,
+      students,
+    });
+  
     const saved = await this.repo.save(paymentType);
+  
+    return {
+      success: true,
+      message: {
+        id: `Payment type berhasil dibuat untuk ${students.length} siswa`,
+        en: `Payment type created for ${students.length} students`,
+      },
+      data: saved,
+    };
+  }
+
+  async findAllWithPaymentStatus() {
+    const types = await this.repo.find({
+      relations: ['students'],
+    });
+  
+    const allPayments = await this.paymentRepo.find({
+      relations: ['student'],
+    });
+  
+    const merged = types.map((type) => {
+  
+      // ✅ Filter semua payment yang memang milik PaymentType ini
+      const paymentsForThisType = allPayments.filter(
+        (p) => p?.type.id === type.id
+      );
+  
+      const students = type.students.map((stu) => {
+  
+        // ✅ Filter lagi payment yang cocok dengan siswa ini
+        const paid = paymentsForThisType.find(
+          (p) => p.studentId === stu.id
+        );
+  
+        return {
+          ...stu,
+          paymentStatus: paid ? paid.status : 'BELUM_LUNAS',
+          paymentDetail: paid
+            ? {
+                paymentId: paid.id,
+                date: paid.date,
+                amount: paid.amount,
+                method: paid.method,
+                year: paid.year,
+              }
+            : null,
+        };
+      });
+  
+      return {
+        ...type,
+        students,
+      };
+    });
+  
     return this._success({
       auth: null,
-      data: saved,
+      data: merged,
       errors: null,
-      links: { self: '/payment-types' },
+      links: { self: '/payment-types/with-status' },
       included: null,
       message: {
-        id: 'Berhasil dibuat',
-        en: 'Successfully created',
+        id: 'Data berhasil diambil',
+        en: 'Data fetched successfully',
       },
     });
   }
-
   async findAll() {
-    const types = await this.repo.find();
+    const types = await this.repo.find({ relations: ['students'] }); // ✅ tampilkan relasi students
     return this._success({
       auth: null,
       data: types,
@@ -46,7 +132,7 @@ export class PaymentTypeService extends BaseResponse {
   }
 
   async findOne(id: string) {
-    const found = await this.repo.findOne({ where: { id } });
+    const found = await this.repo.findOne({ where: { id }, relations: ['students'] }); // ✅ tampilkan siswa terkait
     if (!found) throw new NotFoundException('Payment type not found');
     return this._success({
       auth: null,
@@ -62,10 +148,25 @@ export class PaymentTypeService extends BaseResponse {
   }
 
   async update(id: string, dto: UpdatePaymentTypeDto) {
-    const existing = await this.repo.preload({ id, ...dto });
+    const existing = await this.repo.findOne({
+      where: { id },
+      relations: ['students'],
+    });
     if (!existing) throw new NotFoundException('Payment type not found');
-
+  
+    // update field biasa
+    Object.assign(existing, dto);
+  
+    // kalau ada update studentIds
+    if (dto.studentIds) {
+      const students = await this.studentRepo.findBy({
+        id: In(dto.studentIds),
+      });
+      existing.students = students;
+    }
+  
     const updated = await this.repo.save(existing);
+  
     return this._success({
       auth: null,
       data: updated,

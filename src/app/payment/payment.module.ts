@@ -8,9 +8,11 @@ import { PaymentTypeController } from './payment-type/payment-type.controller';
 import { PaymentTypeService } from './payment-type/payment-type.service';
 import { Student } from '../student/student.entity';
 import { PaymentScheduler } from './payment.scheduler';
+import { PaymentHistoryModule } from './payment-history/payment-history.module';
+
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payment,PaymentType,Student])],
+  imports: [TypeOrmModule.forFeature([Payment,PaymentType,Student]), PaymentHistoryModule],
   controllers: [PaymentController, PaymentTypeController],
   providers: [PaymentService, PaymentTypeService, PaymentScheduler],
 })
