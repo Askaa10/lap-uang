@@ -11,11 +11,11 @@ import { Student } from '../student/student.entity';
 import { Receipt } from '../receipts/receipt.entity';
 import { PaymentType } from './payment-type/payment-type.entity';
 
-
 export enum PaymentStatus {
   BELUM_LUNAS = 'BELUM LUNAS',
   LUNAS = 'LUNAS',
-  TUNGGAKAN = "TUNGGAKAN"
+  TUNGGAKAN = 'TUNGGAKAN',
+  NYICIL = 'NYICIL',
 }
 
 @Entity('payments')
@@ -40,7 +40,7 @@ export class Payment {
     enum: PaymentStatus,
     default: PaymentStatus.BELUM_LUNAS,
   })
-  status: PaymentStatus; // 🔥 tambahkan ini
+  status: PaymentStatus;
 
   @Column()
   amount: number;
@@ -62,10 +62,19 @@ export class Payment {
 
   @CreateDateColumn()
   createdAt: Date;
-  @ManyToOne(() => PaymentType, (type) => type.payments)
+
+  // ✅ FIXED: cukup relasi ini saja, jangan pakai @Column() tambahan
+  @ManyToOne(() => PaymentType, (type) => type.payments, {
+    nullable: false, // wajib isi typeId
+    onDelete: 'RESTRICT',
+  })
   @JoinColumn({ name: 'typeId' })
   type: PaymentType;
 
+
   @Column()
-  typeId: string;
+  remainder : number;
+
+  @Column()
+  paid : number;
 }

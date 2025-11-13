@@ -1,12 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Student } from '../student/student.entity';
 
 @Entity('spp_payments')
 export class SppPayment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
- 
 
   @ManyToOne(() => Student, (student) => student.spp, {
     onDelete: 'CASCADE',
@@ -54,4 +58,10 @@ export class SppPayment {
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
+
+  @Column()
+  remainder: number;
+
+  @Column()
+  paid: number;
 }

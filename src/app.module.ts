@@ -9,7 +9,6 @@ import { PaymentModule } from './app/payment/payment.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReceiptsModule } from './app/receipts/receipts.module';
-import { ArrearModule } from './app/arrear/arrear.module';
 import { ExpenseModule } from './app/expense/expense.module';
 import { InitialBalanceModule } from './app/initial-balance/initial-balance.module';
 import { CloudinaryModule } from './app/cloudinary/cloudinary.module';
@@ -38,7 +37,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     StudentModule,
     PaymentModule,
     ReceiptsModule,
-    ArrearModule,
     ExpenseModule,
     InitialBalanceModule,
     CloudinaryModule,
