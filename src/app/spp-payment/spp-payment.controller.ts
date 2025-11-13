@@ -50,4 +50,6 @@ export class SppPaymentController {
   remove(@Param('id') id: string) {
     return this.sppPaymentService.remove(id);
   }
+
+  
 }

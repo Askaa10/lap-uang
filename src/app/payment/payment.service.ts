@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Payment, PaymentStatus } from './payment.entity';
-
 import { PaymentType } from './payment-type/payment-type.entity';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
@@ -14,6 +13,7 @@ export class PaymentService extends BaseResponse {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
+
     @InjectRepository(Student)
     private readonly studentRepo: Repository<Student>,
 
@@ -23,229 +23,244 @@ export class PaymentService extends BaseResponse {
     super();
   }
 
+  // ✅ CREATE PAYMENT
   async create(dto: CreatePaymentDto) {
+    const student = await this.studentRepo.findOneBy({ id: dto.studentId });
+    if (!student) throw new NotFoundException('Student not found');
+
+    const type = await this.paymentTypeRepo.findOneBy({ id: dto.typeId });
+    if (!type) throw new NotFoundException('Payment type not found');
+
     const payment = this.paymentRepo.create({
       ...dto,
+      student,
+      type,
       status: PaymentStatus.LUNAS,
     });
+
     const saved = await this.paymentRepo.save(payment);
-    return {
-      message: 'Payment created successfully',
+    return this._success({
+      message: { en: 'Payment created successfully', id: 'Pembayaran berhasil dibuat' },
       data: saved,
-    };
-  }
-
-  async createBulk(dtos: CreatePaymentDto[]) {
-    const payments = this.paymentRepo.create(dtos);
-    const saved = await this.paymentRepo.save(payments);
-    return {
-      message: 'Payments created successfully',
-      data: saved,
-    };
-  }
-
-  async findAll() {
-    const payments = await this.paymentRepo.find({ relations: ['student'] });
-    return {
-      message: 'List of all payments',
-      total: payments.length,
-      data: payments,
-    };
-  }
-
-  async getGroupedPaymentsByStudent(typeId: string) {
-    const payments = await this.paymentRepo.find({
-      where: { typeId },
-      relations: ['student', 'type'], // ambil student + payment type
-      order: { date: 'ASC' },
     });
+  }
 
-    const grouped = payments.reduce(
-      (acc, curr) => {
-        const key = curr.studentId;
+  // ✅ CREATE BULK
+  async createBulk(dtos: CreatePaymentDto[]) {
+    const payments = await Promise.all(
+      dtos.map(async (dto) => {
+        const student = await this.studentRepo.findOneBy({ id: dto.studentId });
+        const type = await this.paymentTypeRepo.findOneBy({ id: dto.typeId });
 
-        if (!acc[key]) {
-          acc[key] = {
-            studentId: curr.studentId,
-            nama: curr.student?.name ?? 'Unknown',
-            tipeKategori: curr.type?.name ?? 'Unknown',
-            jumlahPembayaran: curr.amount,
-            jumlahTransaksi: 1,
-            jumlahTagihan: curr.type?.nominal ?? 0, // 🔥 ambil dari PaymentType
-            jumlahHarusDibayar: (curr.type?.nominal ?? 0) - curr.amount,
-            status:
-              curr.amount >= (curr.type?.nominal ?? 0)
-                ? PaymentStatus.LUNAS
-                : PaymentStatus.BELUM_LUNAS,
-            firstPaymentDate: curr.date,
-            lastPaymentDate: curr.date,
-          };
-        } else {
-          acc[key].jumlahPembayaran += curr.amount;
-          acc[key].jumlahTransaksi += 1;
-          acc[key].jumlahHarusDibayar =
-            acc[key].jumlahTagihan - acc[key].jumlahPembayaran;
-          acc[key].status =
-            acc[key].jumlahPembayaran >= acc[key].jumlahTagihan
-              ? PaymentStatus.LUNAS
-              : PaymentStatus.BELUM_LUNAS;
-          acc[key].lastPaymentDate = curr.date;
-        }
+        if (!student || !type) return null;
 
-        return acc;
-      },
-      {} as Record<string, any>,
+        return this.paymentRepo.create({
+          ...dto,
+          student,
+          type,
+          status: PaymentStatus.LUNAS,
+        });
+      }),
     );
 
-    // kasih nomor urut biar rapi
-    const data = Object.values(grouped).map((item: any, index: number) => ({
-      no: index + 1,
-      ...item,
-    }));
+    const validPayments = payments.filter((p): p is Payment => p !== null);
 
-    return this._success({ data });
+    if (validPayments.length === 0) {
+      return this._success({
+        message: { en: 'No valid payments to create', id: 'Tidak ada pembayaran valid untuk dibuat' },
+        data: [],
+      });
+    }
+
+    const saved = await this.paymentRepo.save(validPayments);
+
+    return this._success({
+      message: { en: 'Payments created successfully', id: 'Pembayaran berhasil dibuat' },
+      data: saved,
+    });
   }
 
-  async rekap() {
-    const payments = await this.paymentRepo.find({ relations: ['student'] });
-    return {
-      message: 'List of all payments',
-      total: payments.length,
+  // ✅ FIND ALL
+  async findAll() {
+    const payments = await this.paymentRepo.find({
+      relations: ['student', 'type'],
+    });
+    return this._success({
+      message: { en: 'List of all payments', id: 'Daftar semua pembayaran' },
+      meta: { total: payments.length },
       data: payments,
-    };
+    });
   }
+
+  // ✅ FIND ONE
   async findOne(id: string) {
     const payment = await this.paymentRepo.findOne({
       where: { id },
-      relations: ['student'],
+      relations: ['student', 'type'],
     });
 
-    if (!payment) {
-      throw new NotFoundException('Payment not found');
-    }
+    if (!payment) throw new NotFoundException('Payment not found');
 
-    return {
-      message: 'Payment fetched successfully',
+    return this._success({
+      message: { en: 'Payment fetched successfully', id: 'Pembayaran berhasil diambil' },
       data: payment,
-    };
+    });
   }
 
+  // ✅ UPDATE PAYMENT
   async updatePayment(
     studentId: string,
     typeId: string,
     year: number,
     updateDto: { status?: string; amount?: number },
   ) {
-    // cari payment yang dimaksud
     const payment = await this.paymentRepo.findOne({
-      where: { studentId, typeId, year },
+      where: { student: { id: studentId }, type: { id: typeId }, year },
       relations: ['student', 'type'],
     });
 
-    if (!payment) {
-      throw new NotFoundException('Payment tidak ditemukan');
+    if (!payment) throw new NotFoundException('Payment tidak ditemukan');
+
+    if (updateDto.status) {
+      // cast the incoming status string to the PaymentStatus enum
+      payment.status = updateDto.status as unknown as PaymentStatus;
     }
 
-    // update field yang dikirim
-    if (updateDto.status !== undefined) {
-      payment.status = updateDto.status as
-        | PaymentStatus.BELUM_LUNAS
-        | PaymentStatus.LUNAS;
-    }
     if (updateDto.amount !== undefined) {
       payment.amount = updateDto.amount;
     }
 
-    await this.paymentRepo.save(payment);
+    const saved = await this.paymentRepo.save(payment);
 
     return this._success({
+      message: { en: 'Payment updated successfully', id: 'Pembayaran berhasil diperbarui' },
       data: {
-        studentId: payment.studentId,
-        typeId: payment.typeId,
-        typeName: payment.type.name,
-        amount: payment.amount,
-        status: payment.status,
+        studentId: saved.student.id,
+        typeId: saved.type.id,
+        typeName: saved.type.name,
+        amount: saved.amount,
+        status: saved.status,
       },
     });
   }
 
+  // ✅ REMOVE PAYMENT
+  async remove(id: string) {
+    const payment = await this.paymentRepo.findOne({ where: { id }, relations: ['student', 'type'] });
+    if (!payment) throw new NotFoundException('Payment not found');
+
+    await this.paymentRepo.remove(payment);
+
+    return this._success({
+      message: { en: 'Payment deleted successfully', id: 'Pembayaran berhasil dihapus' },
+      data: payment,
+    });
+  }
+
+  // ✅ GROUPED PAYMENTS
+  async getGroupedPaymentsByStudent(typeId: string) {
+    const payments = await this.paymentRepo.find({
+      where: { type: { id: typeId } },
+      relations: ['student', 'type'],
+      order: { date: 'ASC' },
+    });
+
+    const grouped = payments.reduce((acc, curr) => {
+      const key = curr.student.id;
+
+      if (!acc[key]) {
+        acc[key] = {
+          studentId: curr.student.id,
+          nama: curr.student.name,
+          tipeKategori: curr.type.name,
+          jumlahTagihan: curr.type.nominal,
+          jumlahPembayaran: curr.amount,
+          jumlahTransaksi: 1,
+          jumlahHarusDibayar: curr.type.nominal - curr.amount,
+          status:
+            curr.amount >= curr.type.nominal
+              ? PaymentStatus.LUNAS
+              : PaymentStatus.BELUM_LUNAS,
+          firstPaymentDate: curr.date,
+          lastPaymentDate: curr.date,
+        };
+      } else {
+        acc[key].jumlahPembayaran += curr.amount;
+        acc[key].jumlahTransaksi += 1;
+        acc[key].jumlahHarusDibayar =
+          acc[key].jumlahTagihan - acc[key].jumlahPembayaran;
+        acc[key].status =
+          acc[key].jumlahPembayaran >= acc[key].jumlahTagihan
+            ? PaymentStatus.LUNAS
+            : PaymentStatus.BELUM_LUNAS;
+        acc[key].lastPaymentDate = curr.date;
+      }
+
+      return acc;
+    }, {} as Record<string, any>);
+
+    const data = Object.values(grouped).map((item: any, i) => ({
+      no: i + 1,
+      ...item,
+    }));
+
+    return this._success({ data });
+  }
+
+  // ✅ PAYMENTS BY CATEGORY
   async paymentsByCategory(kategoriName: string) {
     const payments = await this.paymentRepo.find({
-      where: { type: { name: kategoriName }, student:{
-        isDelete: false
-      } },
+      where: {
+        type: { name: kategoriName },
+        student: { isDelete: false },
+      },
       relations: ['student', 'type'],
     });
 
-    return this._success({
-      data: payments,
-    });
+    return this._success({ data: payments });
   }
 
-  async getPaymentsByCNS(ids: string, idc: string) {
-    const Payment = await this.paymentRepo.find({
-      where: { studentId: ids, typeId: idc },
+  // ✅ GET PAYMENT BY STUDENT + TYPE
+  async getPaymentsByCNS(studentId: string, typeId: string) {
+    const payments = await this.paymentRepo.find({
+      where: { student: { id: studentId }, type: { id: typeId } },
+      relations: ['student', 'type'],
     });
 
-    return this._success({
-      data: Payment,
-    });
+    return this._success({ data: payments });
   }
 
+  // ✅ REKAP BULANAN
   async rekapBulanan(year: number) {
     const students = await this.studentRepo.find({
-      where: {isDelete:false},
+      where: { isDelete: false },
       relations: ['payments', 'payments.type'],
     });
 
-    // ambil daftar kategori dari payment-type
     const paymentTypes = await this.paymentTypeRepo.find();
 
     const result = students.map((student) => {
-      const payments: { category: string; status: string }[] = [];
+      const payments = paymentTypes.map((type) => ({
+        category: snakeCase(type.name),
+        status: 'BELUM_LUNAS',
+      }));
 
-      // isi setiap kategori dengan default BELUM_LUNAS
-      paymentTypes.forEach((type) => {
-        const key = snakeCase(type?.name);
-        payments.push({
-          category: key,
-          status: 'BELUM_LUNAS',
-        });
-      });
-
-      // update status berdasarkan payment student
       student.payments.forEach((payment) => {
-        const key = snakeCase(payment?.type?.name);
+        const key = snakeCase(payment.type?.name);
         const index = payments.findIndex((p) => p.category === key);
         if (index !== -1) {
           payments[index].status =
-            payment.status && payment.status == 'LUNAS'
+            payment.status === PaymentStatus.LUNAS
               ? 'LUNAS'
-              : payment.status == 'BELUM LUNAS'
-                ? 'BELUM_LUNAS'
-                : 'TUNGGAKAN';
+              : payment.status === PaymentStatus.BELUM_LUNAS
+              ? 'BELUM_LUNAS'
+              : 'TUNGGAKAN';
         }
       });
 
-      return {
-        name: student.name,
-        payments,
-      };
+      return { name: student.name, payments };
     });
 
-    return this._success({ data:  result});
-  }
-  async remove(id: string) {
-    const payment = await this.paymentRepo.findOne({ where: { id } });
-
-    if (!payment) {
-      throw new NotFoundException('Payment not found');
-    }
-
-    await this.paymentRepo.remove(payment);
-    return {
-      message: 'Payment deleted successfully',
-      data: payment,
-    };
+    return this._success({ data: result });
   }
 }

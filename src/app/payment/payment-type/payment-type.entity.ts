@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Payment } from '../payment.entity';
-import { Arrears } from '../../arrear/arrear.entity';
 import { CategoryTypes } from './payment-type.enum';
 
 @Entity()
@@ -29,6 +28,4 @@ export class PaymentType {
   @OneToMany(() => Payment, (payment) => payment.type)
   payments: Payment[];
 
-  @OneToMany(() => Arrears, (arrear) => arrear.type)
-  arrears: Arrears[];
 }

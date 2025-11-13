@@ -4,10 +4,12 @@ import { StudentController } from './student.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Student } from './student.entity';
 import { Payment } from '../payment/payment.entity';
+import { PaymentType } from '../payment/payment-type/payment-type.entity';
+import { SppPayment } from '../spp-payment/spp-payment.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Student,Payment]),
+    TypeOrmModule.forFeature([Student,Payment,PaymentType,SppPayment]),
   ],
   providers: [StudentService],
   controllers: [StudentController],

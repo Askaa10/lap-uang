@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 import { Role } from './auth.enum';
 import { ResetPassword } from './resetPassword.entity';
-import { Arrears } from '../arrear/arrear.entity';
 // sesuaikan path-nya
 
 @Entity()
@@ -42,6 +41,4 @@ export class User {
   @OneToMany(() => ResetPassword, (resetPassword) => resetPassword.user)
   resetPasswords: ResetPassword[];
   
-  @OneToMany(() => Arrears, (arrear) => arrear.student)
-  arrears: Arrears[];
 }
