@@ -1,156 +1,106 @@
-// src/app/student/student.service.ts
-
-import { HttpException, Injectable } from '@nestjs/common';
-import { BaseResponse } from '../../utils/response/base.response';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student } from './student.entity';
+import { Payment } from '../payment/payment.entity';
+import { PaymentType } from '../payment/payment-type/payment-type.entity';
 import { CreateStudentDto } from './student.dto';
+import { SppPayment } from '../spp-payment/spp-payment.entity';
+import { spawn } from 'child_process';
 
 @Injectable()
-export class StudentService extends BaseResponse {
+export class StudentService {
   constructor(
     @InjectRepository(Student)
-    private Sr: Repository<Student>,
-  ) {
-    super();
-  }
+    private studentRepository: Repository<Student>,
 
-  async getAll() {
-    const students = await this.Sr.find({ where: { isDelete: false } });
-    return this._success({ data: students });
-  }
+    @InjectRepository(Payment)
+    private paymentRepository: Repository<Payment>,
 
-  async createStudents(createStudentDtos: CreateStudentDto[]) {
-    try {
-      if (createStudentDtos.length === 0) {
-        return this._success({ data: [] });
-      } else if (createStudentDtos.length > 1) {
-        for (let i in createStudentDtos) {
-          const createStudentDto = await createStudentDtos[i];
-          await this.Sr.save(createStudentDto);
-        }
-      }
-      return this._success({
-        data: createStudentDtos,
-        links: {
-          self: '/student/createBulk',
-        },
-      });
-    } catch (err) {
-      if (err) {
-        throw new HttpException(`Error creating students: ${err.message}`, 500);
-      }
+    @InjectRepository(SppPayment)
+    private SPrepo: Repository<SppPayment>,
+
+    @InjectRepository(PaymentType)
+    private paymentTypeRepository: Repository<PaymentType>,
+  ) {}
+
+  // ✅ CREATE STUDENT + AUTO 36 BULAN SPP
+  async create(createStudentDto: CreateStudentDto) {
+    const student = this.studentRepository.create(createStudentDto);
+    const savedStudent = await this.studentRepository.save(student);
+
+    // Buat 36 bulan data SPP otomatis (3 tahun)
+    const sppList: SppPayment[] = [];
+    const startDate = new Date();
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    ];
+
+    for (let i = 0; i < 36; i++) {
+      const date = new Date(startDate);
+      date.setMonth(startDate.getMonth() + i);
+
+      const sppPayment = new SppPayment();
+      sppPayment.student = savedStudent;
+      sppPayment.studentId = savedStudent.id;
+      sppPayment.month = months[date.getMonth()];
+      sppPayment.year = date.getFullYear().toString();
+      sppPayment.nominal = 0;
+      sppPayment.status = 'BELUM_LUNAS';
+      sppPayment.paidAt = null;
+      sppPayment.remainder = 0;
+      sppPayment.paid = 0;
+
+      sppList.push(sppPayment);
     }
+
+    await this.SPrepo.save(sppList);
+
+    return {
+      message: 'Student created successfully with 36 months of SPP data',
+      data: savedStudent,
+    };
   }
 
-  async createStudent(createStudentDto: CreateStudentDto) {
-    const student = this.Sr.create(createStudentDto);
-    await this.Sr.save(student);
-    return this._success({
+  // ✅ GET SEMUA STUDENT + DATA SPP
+  async findAll() {
+    const students = await this.studentRepository.find({
+      relations: ['spp'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      message: 'List of all students with SPP data',
+      total: students.length,
+      data: students,
+    };
+  }
+
+  // ✅ GET STUDENT BERDASARKAN ID
+  async findOne(id: string) {
+    const student = await this.studentRepository.findOne({
+      where: { id },
+      relations: ['spp'],
+    });
+
+    if (!student) throw new NotFoundException('Student not found');
+
+    return {
+      message: 'Student found',
       data: student,
-      links: {
-        self: `/student/create`,
-      },
-    });
+    };
   }
 
-  async updateStudent(id: string, updateData: Partial<CreateStudentDto> | any) {
-    await this.Sr.update(id, updateData);
-    const updatedStudent = await this.Sr.findOne({ where: { id } });
-    return this._success({ data: updatedStudent });
-  }
+  // ✅ DELETE STUDENT (otomatis hapus SPP karena relasi onDelete: CASCADE)
+  async remove(id: string) {
+    const student = await this.studentRepository.findOne({ where: { id } });
+    if (!student) throw new NotFoundException('Student not found');
 
-  async deleteStudent(id: string) {
-    const deleted = await this.Sr.delete(id);
-    return this._success({ data: deleted });
-  }
+    await this.studentRepository.remove(student);
 
-  async detailStudent(id: string) {
-    const student = await this.Sr.findOne({ where: { id } });
-    return this._success({ data: student });
-  }
-
-  async updateStatusDelete(payload: any, id: string) {
-    await this.Sr.update(id, payload);
-    const updatedStudent = await this.Sr.findOne({ where: { id } });
-    return this._success({ data: updatedStudent });
-  }
-
-  async deduplicate(byNIS: boolean = true) {
-    const students = await this.Sr.find({ where: { isDelete: false } });
-    const seen = new Set();
-    const toDelete: string[] = [];
-
-    for (const student of students) {
-      const key = byNIS ? student.NISN : student.NISN;
-      if (key && seen.has(key)) {
-        // duplikat, tandai untuk dihapus
-        toDelete.push(student.id);
-      } else if (key) {
-        seen.add(key);
-      }
-    }
-
-    // Hapus semua yang duplikat
-    if (toDelete.length > 0) {
-      await this.Sr.update(toDelete, { isDelete: true });
-    }
-
-    return this._success({
-      data: {
-        deleted: toDelete.length,
-        deletedIds: toDelete,
-      },
-      message:
-        toDelete.length > 0
-          ? {
-              en: 'Duplicates found and deleted',
-              id: 'Duplikat ditemukan dan dihapus',
-            }
-          : { en: 'No duplicates found', id: 'Tidak ada duplikat' },
-    });
-  }
-
-  async deleteBulkStudent(ids: string[]) {
-    const deleted = await this.Sr.delete(ids);
-    return this._success({ data: deleted });
-  }
-
-  async getSppByMonth(month?: number, year?: number) {
-    const m = month ?? new Date().getMonth() + 1; // JS month is 0-based, API expects 1-12
-    const y = year ?? new Date().getFullYear();
-
-    // Ambil semua siswa (non deleted) dan join payments yang sesuai month/year
-    const students = await this.Sr.createQueryBuilder('student')
-      .leftJoinAndSelect(
-        'student.payments',
-        'payment',
-        'payment.month = :month AND payment.year = :year',
-        { month: m, year: y },
-      )
-      .where('student.isDelete = false')
-      .getMany();
-
-    // Normalisasi output: total pembayaran pada bulan tsb + daftar pembayaran (bisa kosong)
-    const data = students.map((s) => {
-      const payments = (s as any).payments ?? [];
-      const totalPaid = payments.reduce(
-        (sum: number, p: any) => sum + ((p.amountPaid ?? p.amount ?? 0) as number),
-        0,
-      );
-      return {
-        id: s.id,
-        name: s.name,
-        NISN: s.NISN,
-        dorm: s.dorm,
-        generation: s.generation,
-        major: s.major,
-        payments,
-        totalPaid,
-      };
-    });
-
-    return this._success({ data, meta: { month: m, year: y } });
+    return {
+      message: 'Student and related SPP data deleted successfully',
+    };
   }
 }

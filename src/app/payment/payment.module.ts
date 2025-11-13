@@ -7,12 +7,13 @@ import { PaymentType } from './payment-type/payment-type.entity';
 import { PaymentTypeController } from './payment-type/payment-type.controller';
 import { PaymentTypeService } from './payment-type/payment-type.service';
 import { Student } from '../student/student.entity';
+import { PaymentScheduler } from './payment.scheduler';
 import { PaymentHistoryModule } from './payment-history/payment-history.module';
-import { PaymentHistory } from './payment-history/payment-history.entity';
+
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payment,PaymentType,Student,PaymentHistory]), PaymentHistoryModule],
+  imports: [TypeOrmModule.forFeature([Payment,PaymentType,Student]), PaymentHistoryModule],
   controllers: [PaymentController, PaymentTypeController],
-  providers: [PaymentService, PaymentTypeService],
+  providers: [PaymentService, PaymentTypeService, PaymentScheduler],
 })
 export class PaymentModule {}

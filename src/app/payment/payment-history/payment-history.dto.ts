@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { PaymentHistoryStatus } from './payment-history.entity';
 
 export class CreatePaymentHistoryDto {
   @IsNotEmpty()
@@ -7,27 +8,63 @@ export class CreatePaymentHistoryDto {
 
   @IsNotEmpty()
   @IsString()
-  statusBefore: string;
+  studentId: string;
 
-  @IsNotEmpty()
-  @IsString()
-  statusAfter: string;
+  @IsOptional()
+  date?: Date;
+
+  @IsEnum(PaymentHistoryStatus)
+  @IsOptional()
+  status?: PaymentHistoryStatus;
+
+  @IsNumber()
+  amount: number;
 
   @IsOptional()
   @IsString()
-  note?: string;
+  method?: string;
+
+  @IsOptional()
+  month?: number;
+
+  @IsOptional()
+  year?: number;
+
+  @IsNotEmpty()
+  @IsString()
+  typeId: string;
+
+  @IsNumber()
+  paid: number;
+
+  @IsNumber()
+  remainder: number;
 }
 
 export class UpdatePaymentHistoryDto {
-    @IsOptional()
-    @IsString()
-    statusBefore?: string;
-  
-    @IsOptional()
-    @IsString()
-    statusAfter?: string;
-  
-    @IsOptional()
-    @IsString()
-    note?: string;
-  }
+  @IsOptional()
+  @IsEnum(PaymentHistoryStatus)
+  status?: PaymentHistoryStatus;
+
+  @IsOptional()
+  @IsNumber()
+  amount?: number;
+
+  @IsOptional()
+  @IsString()
+  method?: string;
+
+  @IsOptional()
+  month?: number;
+
+  @IsOptional()
+  year?: number;
+
+  @IsOptional()
+  @IsNumber()
+  paid?: number;
+
+  @IsOptional()
+  @IsNumber()
+  remainder?: number;
+}

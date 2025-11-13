@@ -16,7 +16,8 @@ import { PaymentHistory } from './payment-history/payment-history.entity';
 export enum PaymentStatus {
   BELUM_LUNAS = 'BELUM LUNAS',
   LUNAS = 'LUNAS',
-  TUNGGAKAN = "TUNGGAKAN"
+  TUNGGAKAN = 'TUNGGAKAN',
+  NYICIL = 'NYICIL',
 }
 
 @Entity('payments')
@@ -31,7 +32,7 @@ export class Payment {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'studentId' })
-  student: Student;wd
+  student: Student;
 
   @Column({ type: 'datetime', nullable: true })
   date: Date;
@@ -41,7 +42,7 @@ export class Payment {
     enum: PaymentStatus,
     default: PaymentStatus.BELUM_LUNAS,
   })
-  status: PaymentStatus; // 🔥 tambahkan ini
+  status: PaymentStatus;
 
   @Column()
   amount: number;
@@ -63,12 +64,26 @@ export class Payment {
 
   @CreateDateColumn()
   createdAt: Date;
-  @ManyToOne(() => PaymentType, (type) => type.payments)
+
+  // ✅ FIXED: cukup relasi ini saja, jangan pakai @Column() tambahan
+  @ManyToOne(() => PaymentType, (type) => type.payments, {
+    nullable: false, // wajib isi typeId
+    onDelete: 'RESTRICT',
+  })
+
+  @ManyToOne(() => PaymentHistory, (history) => history.payment, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  history?: PaymentHistory;
+
   @JoinColumn({ name: 'typeId' })
   type: PaymentType;
-  @OneToMany(() => PaymentHistory, history => history.payment, { cascade: true })
-histories: PaymentHistory[];
+
 
   @Column()
-  typeId: string;
+  remainder : number;
+
+  @Column()
+  paid : number;
 }
