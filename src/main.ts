@@ -6,7 +6,7 @@ import 'tsconfig-paths/register';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.enableCors({
-    origin: ['http://localhost:3050', "*"],
+    origin: ['http://localhost:3050', "*", 'https://laporan-uang-sekolah.vercel.app'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,

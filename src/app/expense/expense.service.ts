@@ -72,13 +72,23 @@ export class ExpenseService extends BaseResponse {
   /**
    * ✅ Get all expenses (exclude soft deleted)
    */
-  async getAll() {
-    const expenses = await this.expenseRepo.find({
-      where: { isDelete: false },
-      relations: ['category', "subCategory  "],
-      order: { createdAt: 'DESC' },
-    });
-    return this._success({ data: expenses });
+  async getAll(categoryName?: string) {
+    const query = this.expenseRepo
+      .createQueryBuilder('expense')
+      .leftJoinAndSelect('expense.category', 'category')
+      .where('expense.isDelete = false')
+      .andWhere('category.isDelete = false')
+      .orderBy('expense.createdAt', 'DESC');
+
+    // Filter berdasarkan nama kategori
+    if (categoryName) {
+      query.andWhere('LOWER(category.name) = LOWER(:categoryName)', {
+        categoryName,
+      });
+    }
+
+    const data = await query.getMany();
+    return this._success({ data });
   }
 
   /**
