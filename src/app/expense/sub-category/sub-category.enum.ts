@@ -5,3 +5,9 @@ export enum Prioritas {
     SANGATGENTING = "SANGATGENTING",
     
 }
+
+export enum MethodPay {
+    CASH = "CASH",
+    CREDIT = "CREDIT",
+    TRANSFER = "TRANSFER"
+}

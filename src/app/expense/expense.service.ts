@@ -5,6 +5,7 @@ import { Expense } from './expense.entity';
 import { BaseResponse } from '../../utils/response/base.response';
 import { CreateExpenseDto } from './expense.dto';
 import { CategoryExpense } from './category/category-expense.entity';
+import { MethodPay } from './sub-category/sub-category.enum';
 
 @Injectable()
 export class ExpenseService extends BaseResponse {
@@ -61,7 +62,12 @@ export class ExpenseService extends BaseResponse {
           amount: d.amount,
           description: d.description,
           isDelete: false,
+          method: Object.values(MethodPay).includes(d.method as MethodPay)
+            ? (d.method as MethodPay)
+            : MethodPay.CASH,
+          // fallback default
           createdAt: new Date(),
+          subCategoryId: d.subCategoryId,
         }),
       ),
     );
@@ -73,21 +79,18 @@ export class ExpenseService extends BaseResponse {
    * ✅ Get all expenses (exclude soft deleted)
    */
   async getAll(categoryName?: string) {
-    const query = this.expenseRepo
-      .createQueryBuilder('expense')
-      .leftJoinAndSelect('expense.category', 'category')
-      .where('expense.isDelete = false')
-      .andWhere('category.isDelete = false')
-      .orderBy('expense.createdAt', 'DESC');
+    const data = await this.expenseRepo.find({
+      where: {
+        isDelete: false,
+        category: {
+          isDelete: false,
+          ...(categoryName ? { name: categoryName.toLowerCase() } : {}),
+        },
+      },
+      relations: ['category', "subCategory"],
+      order: { createdAt: 'DESC' },
+    });
 
-    // Filter berdasarkan nama kategori
-    if (categoryName) {
-      query.andWhere('LOWER(category.name) = LOWER(:categoryName)', {
-        categoryName,
-      });
-    }
-
-    const data = await query.getMany();
     return this._success({ data });
   }
 
