@@ -65,20 +65,26 @@ export class Payment {
   @CreateDateColumn()
   createdAt: Date;
 
- // RELASI KE PAYMENT TYPE
-@ManyToOne(() => PaymentType, (type) => type.payments, {
-  nullable: false,
-  onDelete: 'RESTRICT',
-})
-@JoinColumn({ name: 'typeId' })
-type: PaymentType;
+  // -------------- FIX: RELASI PAYMENT TYPE --------------
+  @ManyToOne(() => PaymentType, (type) => type.payments, {
+    nullable: false,
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'typeId' })
+  type: PaymentType;
+  // -> Tidak perlu @Column('typeId'), TypeORM bikin otomatis
 
-// RELASI KE PAYMENT HISTORY
-@OneToMany(() => PaymentHistory, (history) => history.payment)
-histories: PaymentHistory[];
-  @Column()
-  remainder : number;
+  // -------------- FIX: RELASI PAYMENT HISTORY --------------
+  @OneToMany(() => PaymentHistory, (history) => history.payment, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  histories: PaymentHistory[];
+  // -> Payment HAS MANY history, bukan many-to-one
 
   @Column()
-  paid : number;
+  remainder: number;
+
+  @Column()
+  paid: number;
 }

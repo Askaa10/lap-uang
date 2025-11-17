@@ -58,7 +58,6 @@ export class Student {
   @OneToMany(() => Payment, (payment) => payment.student)
   payments: Payment[];
 
-
   @OneToMany(() => SppPayment, (spp) => spp.student)
   spp: SppPayment[];
 

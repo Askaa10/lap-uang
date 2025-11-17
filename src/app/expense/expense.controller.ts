@@ -29,9 +29,11 @@ export class ExpenseController {
     return this.service.createMany(dtos);
   }
 
-  @Get()
-  getAll() {
-    return this.service.getAll();
+  @Get("/:ct")
+  async getAll(
+    @Param('ct') categoryName?: string,
+  ) {
+    return this.service.getAll(categoryName);
   }
 
   @Get(':id')

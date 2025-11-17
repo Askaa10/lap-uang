@@ -5,8 +5,10 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { CategoryExpense } from '../category/category-expense.entity';
+import { Expense } from '../expense.entity';
 
 @Entity('subcategory')
 export class SubCategory {
@@ -41,6 +43,6 @@ export class SubCategory {
   createdAt: Date;
 
   // Relasi ke Expense
-  //   @OneToMany(() => Expense, (expense) => expense.subCategory)
-  //   expenses: Expense[];
+    @OneToMany(() => Expense, (expense) => expense.subCategory)
+    expenses: Expense[];
 }

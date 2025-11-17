@@ -14,7 +14,7 @@ import { PaymentType } from './payment-type/payment-type.entity';
   imports: [
     TypeOrmModule.forFeature([Payment, Student, PaymentHistory, PaymentType]),
     PaymentHistoryModule,
-    PaymentTypeModule, // ← WAJIB
+    PaymentTypeModule,
   ],
   controllers: [PaymentController],
   providers: [PaymentService, PaymentScheduler],

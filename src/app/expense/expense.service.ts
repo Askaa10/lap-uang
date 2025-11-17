@@ -5,6 +5,7 @@ import { Expense } from './expense.entity';
 import { BaseResponse } from '../../utils/response/base.response';
 import { CreateExpenseDto } from './expense.dto';
 import { CategoryExpense } from './category/category-expense.entity';
+import { MethodPay } from './sub-category/sub-category.enum';
 
 @Injectable()
 export class ExpenseService extends BaseResponse {
@@ -61,7 +62,12 @@ export class ExpenseService extends BaseResponse {
           amount: d.amount,
           description: d.description,
           isDelete: false,
+          method: Object.values(MethodPay).includes(d.method as MethodPay)
+            ? (d.method as MethodPay)
+            : MethodPay.CASH,
+          // fallback default
           createdAt: new Date(),
+          subCategoryId: d.subCategoryId,
         }),
       ),
     );
@@ -72,13 +78,20 @@ export class ExpenseService extends BaseResponse {
   /**
    * ✅ Get all expenses (exclude soft deleted)
    */
-  async getAll() {
-    const expenses = await this.expenseRepo.find({
-      where: { isDelete: false },
-      relations: ['category', "subCategory  "],
+  async getAll(categoryName?: string) {
+    const data = await this.expenseRepo.find({
+      where: {
+        isDelete: false,
+        category: {
+          isDelete: false,
+          ...(categoryName ? { name: categoryName.toLowerCase() } : {}),
+        },
+      },
+      relations: ['category', "subCategory"],
       order: { createdAt: 'DESC' },
     });
-    return this._success({ data: expenses });
+
+    return this._success({ data });
   }
 
   /**
