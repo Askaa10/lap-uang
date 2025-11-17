@@ -73,14 +73,14 @@ export class PaymentTypeService extends BaseResponse {
   
       // ✅ Filter semua payment yang memang milik PaymentType ini
       const paymentsForThisType = allPayments.filter(
-        (p) => p.typeId === type.id
+        (p) => p.type.id === type.id
       );
   
       const students = type.students.map((stu) => {
   
         // ✅ Filter lagi payment yang cocok dengan siswa ini
         const paid = paymentsForThisType.find(
-          (p) => p.studentId === stu.id
+          (p) => p.student.id === stu.id
         );
   
         return {

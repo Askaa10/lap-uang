@@ -65,22 +65,17 @@ export class Payment {
   @CreateDateColumn()
   createdAt: Date;
 
-  // ✅ FIXED: cukup relasi ini saja, jangan pakai @Column() tambahan
-  @ManyToOne(() => PaymentType, (type) => type.payments, {
-    nullable: false, // wajib isi typeId
-    onDelete: 'RESTRICT',
-  })
+ // RELASI KE PAYMENT TYPE
+@ManyToOne(() => PaymentType, (type) => type.payments, {
+  nullable: false,
+  onDelete: 'RESTRICT',
+})
+@JoinColumn({ name: 'typeId' })
+type: PaymentType;
 
-  @ManyToOne(() => PaymentHistory, (history) => history.payment, {
-    nullable: true,
-    onDelete: 'CASCADE',
-  })
-  history?: PaymentHistory;
-
-  @JoinColumn({ name: 'typeId' })
-  type: PaymentType;
-
-
+// RELASI KE PAYMENT HISTORY
+@OneToMany(() => PaymentHistory, (history) => history.payment)
+histories: PaymentHistory[];
   @Column()
   remainder : number;
 

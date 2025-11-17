@@ -231,38 +231,42 @@ export class PaymentService extends BaseResponse {
   }
 
   // ✅ REKAP BULANAN
-  async rekapBulanan(year: number) {
-    const students = await this.studentRepo.find({
-      where: { isDelete: false },
-      relations: ['payments', 'payments.type'],
+async rekapBulanan(year: number) {
+  const students = await this.studentRepo.find({
+    where: { isDelete: false },
+    relations: ['payments', 'payments.type'],
+  });
+
+  const paymentTypes = await this.paymentTypeRepo.find();
+
+  const result = students.map((student) => {
+    const payments = paymentTypes.map((type) => ({
+      category: snakeCase(type.name),
+      status: 'BELUM_LUNAS',
+    }));
+
+    student.payments.forEach((payment) => {
+      const key = snakeCase(payment.type?.name);
+      const index = payments.findIndex((p) => p.category === key);
+
+      // tentukan status dulu
+      const paymentStatus =
+        payment.status === PaymentStatus.LUNAS
+          ? 'LUNAS'
+          : payment.status === PaymentStatus.BELUM_LUNAS
+          ? 'BELUM_LUNAS'
+          : 'TUNGGAKAN';
+
+      // update jika kategori ditemukan
+      if (index !== -1) {
+        payments[index].status = paymentStatus;
+      }
     });
 
-    const paymentTypes = await this.paymentTypeRepo.find();
+    return { name: student.name, payments };
+  });
 
-    const result = students.map((student) => {
-      const payments = paymentTypes.map((type) => ({
-        category: snakeCase(type.name),
-        status: 'BELUM_LUNAS',
-      }));
+  return this._success({ data: result });
+}
 
-      student.payments.forEach((payment) => {
-        const key = snakeCase(payment.type?.name);
-        const index = payments.findIndex((p) => p.category === key);
-        if (index !== -1) {
-          payments[index].status =
-            payment.status === PaymentStatus.LUNAS
-              ? 'LUNAS'
-              : payment.status === PaymentStatus.BELUM_LUNAS
-              ? 'BELUM_LUNAS'
-              : 'TUNGGAKAN';
-        }
-  
-        payments.push({ category: key, status });
-      });
-
-      return { name: student.name, payments };
-    });
-
-    return this._success({ data: result });
-  }
 }

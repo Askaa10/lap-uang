@@ -27,22 +27,20 @@ import {
     // 🔗 Relasi ke payment utama
     @Column()
     paymentId: string;
-  
-    @ManyToOne(() => Payment, (payment) => payment.history, {
+    @ManyToOne(() => Payment, (payment) => payment.histories, {
       onDelete: 'CASCADE',
     })
     @JoinColumn({ name: 'paymentId' })
     payment: Payment;
-  
+    
     @Column()
     studentId: string;
-  
-    @ManyToOne(() => Student, (student) => student.paymentTypes, {
+    
+    @ManyToOne(() => Student, (student) => student.paymentHistories, {
       onDelete: 'CASCADE',
     })
     @JoinColumn({ name: 'studentId' })
     student: Student;
-  
     @Column({ type: 'datetime', nullable: true })
     date: Date;
   

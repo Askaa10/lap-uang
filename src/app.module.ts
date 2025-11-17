@@ -15,6 +15,8 @@ import { CloudinaryModule } from './app/cloudinary/cloudinary.module';
 import { UploadModule } from './app/upload/upload.module';
 import { SppPaymentModule } from './app/spp-payment/spp-payment.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { PaymentTypeModule } from './app/payment/payment-type/payment-type.module';
+import { PaymentHistoryModule } from './app/payment/payment-history/payment-history.module';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     TypeOrmModule.forRootAsync({
       useFactory: async () => {
         const { typeOrmConfig } = await import('./config/typeorm.config');
-        return { ...typeOrmConfig, synchronize: true };
+        return { ...typeOrmConfig, synchronize: true, autoLoadEntities: true };
       },
     }),
         ScheduleModule.forRoot(),
@@ -41,7 +43,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     InitialBalanceModule,
     CloudinaryModule,
     SppPaymentModule,
-    
+   
   ],
   controllers: [AppController],
   providers: [AppService],
