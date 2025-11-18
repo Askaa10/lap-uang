@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { PaymentType } from './payment-type.entity';
@@ -67,9 +71,6 @@ export class PaymentTypeService extends BaseResponse {
     const result = await this.repo.find({
       relations: ['students'],
     });
-
-
-
     return this._success({
       auth: null,
       data: result,
