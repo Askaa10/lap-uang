@@ -25,31 +25,35 @@ export class PaymentTypeService extends BaseResponse {
   // ✅ saat membuat PaymentType baru, semua siswa otomatis ditambahkan
   async create(dto: CreatePaymentTypeDto) {
     let students = [];
-  
+
     console.log('👉 studentIds dari FE:', dto.studentIds);
-  
+
     if (Array.isArray(dto.studentIds) && dto.studentIds.length > 0) {
       // ✅ Ambil siswa berdasarkan ID yang dikirim
       students = await this.studentRepo.findBy({
         id: In(dto.studentIds),
       });
-  
+
       if (students.length === 0) {
-        throw new NotFoundException('Siswa tidak ditemukan untuk ID yang dikirim');
+        throw new NotFoundException(
+          'Siswa tidak ditemukan untuk ID yang dikirim',
+        );
       }
     } else {
       // ✅ Jika tidak dikirim, ambil semua siswa
-      console.log('⚠️ Tidak ada studentIds dikirim — otomatis ambil semua siswa');
+      console.log(
+        '⚠️ Tidak ada studentIds dikirim — otomatis ambil semua siswa',
+      );
       students = await this.studentRepo.find(); // ambil semua siswa di database
     }
-  
+
     const paymentType = this.repo.create({
       ...dto,
       students,
     });
-  
+
     const saved = await this.repo.save(paymentType);
-  
+
     return {
       success: true,
       message: {
@@ -59,54 +63,16 @@ export class PaymentTypeService extends BaseResponse {
       data: saved,
     };
   }
-
   async findAllWithPaymentStatus() {
-    const types = await this.repo.find({
+    const result = await this.repo.find({
       relations: ['students'],
     });
-  
-    const allPayments = await this.paymentRepo.find({
-      relations: ['student'],
-    });
-  
-    const merged = types.map((type) => {
-  
-      // ✅ Filter semua payment yang memang milik PaymentType ini
-      const paymentsForThisType = allPayments.filter(
-        (p) => p?.type.id === type.id
-      );
-  
-      const students = type.students.map((stu) => {
-  
-        // ✅ Filter lagi payment yang cocok dengan siswa ini
-        const paid = paymentsForThisType.find(
-          (p) => p.student.id === stu.id
-        );
-  
-        return {
-          ...stu,
-          paymentStatus: paid ? paid.status : 'BELUM_LUNAS',
-          paymentDetail: paid
-            ? {
-                paymentId: paid.id,
-                date: paid.date,
-                amount: paid.amount,
-                method: paid.method,
-                year: paid.year,
-              }
-            : null,
-        };
-      });
-  
-      return {
-        ...type,
-        students,
-      };
-    });
-  
+
+
+
     return this._success({
       auth: null,
-      data: merged,
+      data: result,
       errors: null,
       links: { self: '/payment-types/with-status' },
       included: null,
@@ -116,6 +82,7 @@ export class PaymentTypeService extends BaseResponse {
       },
     });
   }
+
   async findAll() {
     const types = await this.repo.find({ relations: ['students'] }); // ✅ tampilkan relasi students
     return this._success({
@@ -132,7 +99,10 @@ export class PaymentTypeService extends BaseResponse {
   }
 
   async findOne(id: string) {
-    const found = await this.repo.findOne({ where: { id }, relations: ['students'] }); // ✅ tampilkan siswa terkait
+    const found = await this.repo.findOne({
+      where: { id },
+      relations: ['students'],
+    }); // ✅ tampilkan siswa terkait
     if (!found) throw new NotFoundException('Payment type not found');
     return this._success({
       auth: null,
@@ -153,10 +123,10 @@ export class PaymentTypeService extends BaseResponse {
       relations: ['students'],
     });
     if (!existing) throw new NotFoundException('Payment type not found');
-  
+
     // update field biasa
     Object.assign(existing, dto);
-  
+
     // kalau ada update studentIds
     if (dto.studentIds) {
       const students = await this.studentRepo.findBy({
@@ -164,9 +134,9 @@ export class PaymentTypeService extends BaseResponse {
       });
       existing.students = students;
     }
-  
+
     const updated = await this.repo.save(existing);
-  
+
     return this._success({
       auth: null,
       data: updated,

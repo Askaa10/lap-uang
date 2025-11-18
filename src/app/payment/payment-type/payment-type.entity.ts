@@ -21,7 +21,7 @@ export class PaymentType {
 
   @Column({ default: 'ACTIVE' })
   status: string;
-  
+
   @Column({ default: '2025/2026' })
   TA: string;
 
@@ -32,9 +32,18 @@ export class PaymentType {
   payments: Payment[];
 
   @ManyToMany(() => Student, (student) => student.paymentTypes)
+  @JoinTable({
+    name: 'payment_type_student', // nama tabel join dari DB lu
+
+    joinColumn: {
+      name: 'paymentTypeId', // nama kolom dari PaymentType
+      referencedColumnName: 'id',
+    },
+
+    inverseJoinColumn: {
+      name: 'studentsId', // nama kolom dari Student
+      referencedColumnName: 'id',
+    },
+  })
   students: Student[];
-
-  @OneToMany(() => PaymentHistory, (history) => history.type)
-  histories: PaymentHistory[];
-
 }
