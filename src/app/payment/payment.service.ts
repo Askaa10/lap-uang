@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Payment, PaymentStatus } from './payment.entity';
@@ -7,6 +7,7 @@ import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
 import { Student } from '../student/student.entity';
 import { snakeCase } from 'lodash';
+import { SppPayment } from '../spp-payment/spp-payment.entity';
 
 @Injectable()
 export class PaymentService extends BaseResponse {
@@ -19,6 +20,9 @@ export class PaymentService extends BaseResponse {
 
     @InjectRepository(PaymentType)
     private readonly paymentTypeRepo: Repository<PaymentType>,
+
+    @InjectRepository(SppPayment)
+    private readonly sppPaymentRepo: Repository<SppPayment>,
   ) {
     super();
   }
@@ -27,24 +31,82 @@ export class PaymentService extends BaseResponse {
   async create(dto: CreatePaymentDto) {
     const student = await this.studentRepo.findOneBy({ id: dto.studentId });
     if (!student) throw new NotFoundException('Student not found');
-
+  
     const type = await this.paymentTypeRepo.findOneBy({ id: dto.typeId });
     if (!type) throw new NotFoundException('Payment type not found');
-
+  
+    // 🔍 Ambil semua payment sebelumnya untuk jenis pembayaran ini
+    const previousPayments = await this.paymentRepo.find({
+      where: {
+        student: { id: dto.studentId },
+        type: { id: dto.typeId },
+      },
+    });
+  
+    const alreadyPaid = previousPayments.reduce((sum, p) => sum + p.paid, 0);
+    const totalPaid = alreadyPaid + dto.amount;
+  
+    if (totalPaid > type.nominal) {
+      throw new BadRequestException('Jumlah pembayaran melebihi total nominal!');
+    }
+  
+    // 💰 Hitung status & remainder
+    let status = PaymentStatus.BELUM_LUNAS;
+    let remainder = type.nominal - totalPaid;
+  
+    if (totalPaid === type.nominal) {
+      status = PaymentStatus.LUNAS;
+      remainder = 0;
+    }
+  
     const payment = this.paymentRepo.create({
       ...dto,
       student,
       type,
-      status: PaymentStatus.LUNAS,
+      paid: dto.amount,
+      remainder,
+      status,
     });
-
+  
     const saved = await this.paymentRepo.save(payment);
+  
     return this._success({
       message: { en: 'Payment created successfully', id: 'Pembayaran berhasil dibuat' },
-      data: saved,
+      data: {
+        ...saved,
+        type,
+        typeText: type.type,
+        totalPaid,
+        remainder,
+        status,
+      },
     });
   }
-
+  async getTagihanByNisn(nisn: string) {
+    const payments = await this.paymentRepo.find({
+      relations: ['student'],
+      where: {
+        status: PaymentStatus.BELUM_LUNAS,
+        student: { NISN: nisn }
+      }
+    });
+  
+    const sppPayment = await this.sppPaymentRepo.find({
+      relations: ['student'],
+      where: {
+        status: 'BELUM_LUNAS',
+        student: { NISN : nisn }
+      }
+    });
+  
+    return this._success({
+      message: { en: 'Payment fetched successfully', id: 'Pembayaran berhasil diambil' },
+      data: [
+        ...payments,
+        ...sppPayment,
+      ],
+    });
+  }
   // ✅ CREATE BULK
   async createBulk(dtos: CreatePaymentDto[]) {
     const payments = await Promise.all(

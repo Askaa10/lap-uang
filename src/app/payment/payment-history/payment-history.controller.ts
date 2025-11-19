@@ -9,12 +9,13 @@ import {
   } from '@nestjs/common';
   import { PaymentHistoryService } from './payment-history.service';
   import { CreatePaymentHistoryDto, UpdatePaymentHistoryDto } from './payment-history.dto';
+import { CreatePaymentDto } from '../payment.dto';
   
   @Controller('payment-history')
   export class PaymentHistoryController {
     constructor(private readonly service: PaymentHistoryService) {}
   
-    @Post()
+    @Post('tambah')
     create(@Body() dto: CreatePaymentHistoryDto) {
       return this.service.create(dto);
     }
