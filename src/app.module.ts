@@ -15,6 +15,7 @@ import { CloudinaryModule } from './app/cloudinary/cloudinary.module';
 import { UploadModule } from './app/upload/upload.module';
 import { SppPaymentModule } from './app/spp-payment/spp-payment.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ProfileModule } from './app/profile/profile.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     InitialBalanceModule,
     CloudinaryModule,
     SppPaymentModule,
+    ProfileModule,
     
   ],
   controllers: [AppController],
