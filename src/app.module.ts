@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './app/auth/auth.module';
-import { MailModule } from './app/mail/mail.module';
 import { SchoolProfileModule } from './app/school-profile/school-profile.module';
 import { StudentModule } from './app/student/student.module';
 import { PaymentModule } from './app/payment/payment.module';
@@ -16,6 +15,7 @@ import { UploadModule } from './app/upload/upload.module';
 import { SppPaymentModule } from './app/spp-payment/spp-payment.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ProfileModule } from './app/profile/profile.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -23,7 +23,9 @@ import { ProfileModule } from './app/profile/profile.module';
       isGlobal: true,
       envFilePath: '.env', // konfigurasi is global untuk semua module
     }),
+    MailerModule,
     TypeOrmModule.forRootAsync({
+
       useFactory: async () => {
         const { typeOrmConfig } = await import('./config/typeorm.config');
         return { ...typeOrmConfig, synchronize: true };
@@ -32,7 +34,6 @@ import { ProfileModule } from './app/profile/profile.module';
         ScheduleModule.forRoot(),
     
     AuthModule,
-    MailModule,
     SchoolProfileModule,
     StudentModule,
     PaymentModule,

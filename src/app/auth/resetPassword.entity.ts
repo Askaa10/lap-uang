@@ -1,4 +1,4 @@
-// entities/ResetPassword.ts
+// resetPassword.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -9,7 +9,6 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 
-
 @Entity()
 export class ResetPassword {
   @PrimaryGeneratedColumn('uuid')
@@ -18,15 +17,19 @@ export class ResetPassword {
   @Column()
   userId: string;
 
-  @Column()
+  @Column({ nullable: true })
   token: string;
+
+  @Column({ nullable: true })
+  sessionId: string;
+
+  @Column({ nullable: true })
+  sessionCreatedAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.resetPasswords, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => User, (user) => user.resetPasswords, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
 }
