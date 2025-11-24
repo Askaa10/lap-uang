@@ -20,22 +20,22 @@ import { CreatePaymentDto } from '../payment.dto';
       return this.service.create(dto);
     }
   
-    @Get()
+    @Get('all')
     findAll() {
       return this.service.findAll();
     }
   
-    @Get(':id')
+    @Get('detail/:id')
     findOne(@Param('id') id: string) {
       return this.service.findOne(id);
     }
   
-    @Patch(':id')
+    @Patch('update/:id')
     update(@Param('id') id: string, @Body() dto: UpdatePaymentHistoryDto) {
       return this.service.update(id, dto);
     }
   
-    @Delete(':id')
+    @Delete('delete/:id')
     remove(@Param('id') id: string) {
       return this.service.remove(id);
     }

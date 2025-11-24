@@ -193,58 +193,130 @@ export class PaymentTypeService extends BaseResponse {
       where: { id },
       relations: ['students'],
     });
-
+  
     if (!existing) throw new NotFoundException('Payment type not found');
-
+  
     Object.assign(existing, dto);
-
-    let students = [];
-
+  
+    // ============================================
+    // 1️⃣ HANDLE RELASI SISWA
+    // ============================================
+  
+    const oldStudents = existing.students;
+    let newStudents = [];
+  
+    // ❗ KASUS 1: FE KIRIM studentIds ada isinya
     if (Array.isArray(dto.studentIds) && dto.studentIds.length > 0) {
-      students = await this.studentRepo.findBy({
+      newStudents = await this.studentRepo.findBy({
         id: In(dto.studentIds),
       });
-
-      if (students.length === 0) {
+  
+      if (newStudents.length === 0) {
         throw new NotFoundException('Siswa tidak ditemukan untuk ID yang dikirim');
       }
-    } else {
-      students = await this.studentRepo.find({
+    }
+  
+    // ❗ KASUS 2: FE KIRIM studentIds = [] -> hapus semua
+    else if (Array.isArray(dto.studentIds) && dto.studentIds.length === 0) {
+      newStudents = [];
+    }
+  
+    // ❗ KASUS 3: FE TIDAK KIRIM studentIds
+    // → otomatis ambil SEMUA siswa seperti CREATE
+    else if (dto.studentIds === undefined) {
+      newStudents = await this.studentRepo.find({
         where: { isDelete: false },
       });
     }
-
-    existing.students = students;
-
+  
+    // Set relasi baru
+    existing.students = newStudents;
+  
+    // ============================================
+    // 2️⃣ HANDLE PERUBAHAN DI PAYMENT
+    // ============================================
+  
+    const removedStudents = oldStudents.filter(
+      (old) => !newStudents.some((s) => s.id === old.id),
+    );
+  
+    for (const removed of removedStudents) {
+      await this.paymentRepo.delete({
+        studentId: removed.id,
+        type: { id: existing.id },
+      });
+    }
+  
+    const addedStudents = newStudents.filter(
+      (s) => !oldStudents.some((old) => old.id === s.id),
+    );
+  
+    for (const added of addedStudents) {
+      const newPayment = this.paymentRepo.create({
+        student: added,
+        studentId: added.id,
+        type: existing,
+        amount: existing.nominal,
+        paid: 0,
+        remainder: existing.nominal,
+        date: new Date(),
+        method: 'NORMAL',
+      });
+  
+      await this.paymentRepo.save(newPayment);
+    }
+  
+    const existingPayments = await this.paymentRepo.find({
+      where: { type: { id: existing.id } },
+      relations: ['student'],
+    });
+  
+    for (const pay of existingPayments) {
+      pay.remainder = existing.nominal - pay.paid;
+      await this.paymentRepo.save(pay);
+    }
+  
+    // ============================================
+    // 3️⃣ SAVE & RETURN
+    // ============================================
     const saved = await this.repo.save(existing);
-
+  
     return this._success({
       data: saved,
       message: {
-        id: `Payment type berhasil diperbarui untuk ${students.length} siswa`,
-        en: `Payment type updated for ${students.length} students`,
+        id: `Payment type & payment berhasil diperbarui untuk ${newStudents.length} siswa`,
+        en: `Payment type & payment updated for ${newStudents.length} students`,
       },
     });
   }
-
   // ==========================================================
   //   DELETE
   // ==========================================================
   async remove(id: string) {
-    const found = await this.repo.findOne({ where: { id } });
+    const found = await this.repo.findOne({
+      where: { id },
+      relations: ['students', 'payments'],
+    });
+  
     if (!found) throw new NotFoundException('Payment type not found');
-
-    await this.repo.remove(found);
+  
+    // 1️⃣ Hapus seluruh payment yang pakai type ini
+    await this.paymentRepo.delete({ type: { id } });
+  
+    // 2️⃣ Kosongkan relasi student (join table)
+    found.students = [];
+    await this.repo.save(found);
+  
+    // 3️⃣ Baru hapus payment type
+    await this.repo.delete(id);
+  
     return this._success({
-      auth: null,
       data: found,
-      errors: null,
-      links: { self: `/payment-types/delete/${id}` },
-      included: null,
       message: {
         id: 'Data berhasil dihapus',
         en: 'Data deleted successfully',
       },
     });
   }
+  
 }
