@@ -11,12 +11,48 @@ export class LoginDTO {
 }
 
 
-export class ResetPasswordDTO {
-  @IsString()
-  @MinLength(8)
-  new_password: string;
+
+export class ForgotPasswordDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 }
 
-export class ChangePassword {
+
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string; // JWT reset token
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  newPassword: string;
+}
+
+
+export class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  newPassword: string;
+
+  @IsString()
+  @IsNotEmpty()
+  resetSessionId : string;
+}
+
+export class VerifyResetTokenDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
   
+  @IsString()
+  @IsNotEmpty()
+  @Length(6, 6) // token 6 digit
+  token: string;
 }

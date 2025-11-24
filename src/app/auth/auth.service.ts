@@ -1,4 +1,6 @@
+import { MailForgotPasswordDTO } from '../../mail/mail.dto';
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -6,16 +8,16 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { LoginDTO, ResetPasswordDTO } from './auth.dto';
+import * as crypto from 'crypto';
+import { LoginDTO, ResetPasswordDto, ChangePasswordDto } from './auth.dto';
 import { BaseResponse } from '../../utils/response/base.response';
 import { JwtService } from '@nestjs/jwt';
-import { MailService } from '../mail/mail.service';
+import { MailService } from '../../mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { ResetPassword } from './resetPassword.entity';
 import { Role } from './auth.enum';
-
 
 @Injectable()
 export class AuthService extends BaseResponse {
@@ -113,41 +115,7 @@ export class AuthService extends BaseResponse {
     return this.userRepo.save(user);
   }
 
-  async changePassword(userChangePassword: {
-    email: string;
-    oldPassword: string;
-    newPassword: string;
-  }) {
-    const user = await this.userRepo.findOne({
-      where: { email: userChangePassword.email },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('Email tidak ditemukan');
-    }
-
-    const isPasswordValid = await bcrypt.compare(
-      userChangePassword.oldPassword,
-      user.password,
-    );
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Password lama salah');
-    }
-
-    user.password = await bcrypt.hash(userChangePassword.newPassword, 10);
-    await this.userRepo.save(user);
-
-    return {
-      message: 'Password berhasil diubah',
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-      },
-    };
-  }
-
+  
   async myProfile(id: string) {
     return this.userRepo.findOne({
       where: { id },
@@ -155,71 +123,119 @@ export class AuthService extends BaseResponse {
     });
   }
 
-  async forgotPassword(email: string) {
+async forgotPassword(email: string) {
     const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) throw new BadRequestException('Email tidak ditemukan');
 
-    if (!user) {
-      throw new HttpException(
-        'Email tidak ditemukan',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
+    await this.resetPasswordRepo.delete({ userId: user.id });
 
-    const token = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit
+    const token = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await this.ms.sendForgotPassword({
-      email: email,
-      name: user.username,
-      otpToken: token,
-      userId: user.id,
-    });
-
-    
-
-    const resetEntry = this.resetPasswordRepo.create({
+    const record = this.resetPasswordRepo.create({
       userId: user.id,
       token,
     });
 
-    await this.resetPasswordRepo.save(resetEntry);
+    await this.resetPasswordRepo.save(record);
+    // send email with token; catch errors from mailer and log for debugging
+    try {
+      const sendResult = await this.ms.sendForgotPassword(
+        email,
+        user.username,
+        token,
+        user.id,
+      );
 
-    return this._success({
-      auth: null,
-      data: { ...user },
-      links: {
-        self: '/auth/login',
-      },
-    });
-  }
-
-  async resetPassword(
-    userId: string,
-    token: string,
-    payload: ResetPasswordDTO,
-  ) {
-    const userToken = await this.resetPasswordRepo.findOne({
-      where: { userId, token },
-    });
-
-    if (!userToken) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('ForgotPassword: token generated', { userId: user.id, token });
+        console.log('ForgotPassword: mailer result', sendResult);
+      }
+    } catch (err) {
+      console.error('Failed to send forgot password email', err);
+      // optionally remove the saved record so user can retry
+      // await this.resetPasswordRepo.delete({ userId: user.id });
       throw new HttpException(
-        'Token tidak valid',
-        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Gagal mengirim email reset password',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    const newHashedPassword = await bcrypt.hash(payload.new_password, 12);
-
-    await this.userRepo.update({ id: userId }, { password: newHashedPassword });
-
-    await this.resetPasswordRepo.delete({ id: userToken.id });
-
-    return this._success({
-      auth: null,
-      data: { ...payload, userId, token },
-      links: {
-        self: '/auth/login',
-      },
-    });
+    return { message: 'Kode telah dikirim ke email' };
   }
+
+
+
+
+  async resetPasswordWithSession(resetSessionId: string, newPassword: string) {
+  const rec = await this.resetPasswordRepo.findOne({
+    where: { sessionId: resetSessionId },
+  });
+
+  if (!rec) throw new BadRequestException("Session tidak valid");
+
+  const diff = (Date.now() - rec.sessionCreatedAt.getTime()) / 1000;
+  if (diff > 300) throw new BadRequestException("Session expired");
+
+  const user = await this.userRepo.findOne({ where: { id: rec.userId } });
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  user.password = hashed;
+
+  await this.userRepo.save(user);
+  await this.resetPasswordRepo.delete({ id: rec.id });
+
+  return { message: "Password berhasil diubah" };
 }
+
+  // Verify a reset token. Accepts { userId?: string, email?: string, token: string }
+ async verifyResetToken(email: string, token: string) {
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) throw new BadRequestException('User tidak ditemukan');
+
+    const rec = await this.resetPasswordRepo.findOne({
+      where: { userId: user.id, token },
+    });
+
+    if (!rec) throw new BadRequestException('Token salah');
+
+    const diff = (Date.now() - rec.createdAt.getTime()) / 1000;
+    if (diff > 60) throw new BadRequestException('Token kedaluwarsa');
+
+    const sessionId = crypto.randomUUID();
+
+    rec.token = null;
+    rec.sessionId = sessionId;
+    rec.sessionCreatedAt = new Date();
+
+    await this.resetPasswordRepo.save(rec);
+
+    return {
+      message: 'Token valid',
+      resetSessionId: sessionId,
+    };
+  }
+
+async changePassword(dto: ChangePasswordDto) {
+  const user = await this.userRepo.findOne({ where: { email: dto.email } });
+
+  if (!user) throw new NotFoundException("User tidak ditemukan");
+
+  // Hash password baru
+  const hashed = await bcrypt.hash(dto.newPassword, 10);
+
+  // Generate resetSessionId otomatis
+  const newResetSessionId = crypto.randomBytes(32).toString("hex");
+
+  user.password = hashed;
+  user.resetSessionId = newResetSessionId;
+
+  await this.userRepo.save(user);
+
+  return {
+    message: "Password berhasil diubah",
+    resetSessionId: newResetSessionId,
+  };
+}
+
+}
+
