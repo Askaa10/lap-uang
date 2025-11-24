@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Payment, PaymentStatus } from './payment.entity';
@@ -23,6 +23,10 @@ export class PaymentService extends BaseResponse {
 
     @InjectRepository(PaymentType)
     private readonly paymentTypeRepo: Repository<PaymentType>,
+
+    @InjectRepository(SppPayment)
+    private readonly sppPaymentRepo: Repository<SppPayment>,
+    
     @InjectRepository(SppPayment)
     private readonly paymentSPPRepo: Repository<SppPayment>,
   ) {
@@ -33,21 +37,80 @@ export class PaymentService extends BaseResponse {
   async create(dto: CreatePaymentDto) {
     const student = await this.studentRepo.findOneBy({ id: dto.studentId });
     if (!student) throw new NotFoundException('Student not found');
-
+  
     const type = await this.paymentTypeRepo.findOneBy({ id: dto.typeId });
     if (!type) throw new NotFoundException('Payment type not found');
-
+  
+    // 🔍 Ambil semua payment sebelumnya untuk jenis pembayaran ini
+    const previousPayments = await this.paymentRepo.find({
+      where: {
+        student: { id: dto.studentId },
+        type: { id: dto.typeId },
+      },
+    });
+  
+    const alreadyPaid = previousPayments.reduce((sum, p) => sum + p.paid, 0);
+    const totalPaid = alreadyPaid + dto.amount;
+  
+    if (totalPaid > type.nominal) {
+      throw new BadRequestException('Jumlah pembayaran melebihi total nominal!');
+    }
+  
+    // 💰 Hitung status & remainder
+    let status = PaymentStatus.BELUM_LUNAS;
+    let remainder = type.nominal - totalPaid;
+  
+    if (totalPaid === type.nominal) {
+      status = PaymentStatus.LUNAS;
+      remainder = 0;
+    }
+  
     const payment = this.paymentRepo.create({
       ...dto,
       student,
       type,
-      status: PaymentStatus.LUNAS,
+      paid: dto.amount,
+      remainder,
+      status,
     });
-
+  
     const saved = await this.paymentRepo.save(payment);
+  
     return this._success({
       message: { en: 'Payment created successfully', id: 'Pembayaran berhasil dibuat' },
-      data: saved,
+      data: {
+        ...saved,
+        type,
+        typeText: type.type,
+        totalPaid,
+        remainder,
+        status,
+      },
+    });
+  }
+  async getTagihanByNisn(nisn: string) {
+    const payments = await this.paymentRepo.find({
+      relations: ['student'],
+      where: {
+        status: PaymentStatus.BELUM_LUNAS,
+        student: { NISN: nisn }
+      }
+    });
+  
+    const sppPayment = await this.sppPaymentRepo.find({
+      relations: ['student'],
+      where: {
+        status: 'BELUM_LUNAS',
+        student: { NISN : nisn }
+      }
+    });
+  
+    return this._success({
+      message: { en: 'Payment fetched successfully', id: 'Pembayaran berhasil diambil' },
+      data: [
+        ...payments,
+        ...sppPayment,
+      ],
     });
   }
 
@@ -272,38 +335,42 @@ export class PaymentService extends BaseResponse {
   }
 
   // ✅ REKAP BULANAN
-  async rekapBulanan(year: number) {
-    const students = await this.studentRepo.find({
-      where: { isDelete: false },
-      relations: ['payments', 'payments.type'],
+async rekapBulanan(year: number) {
+  const students = await this.studentRepo.find({
+    where: { isDelete: false },
+    relations: ['payments', 'payments.type'],
+  });
+
+  const paymentTypes = await this.paymentTypeRepo.find();
+
+  const result = students.map((student) => {
+    const payments = paymentTypes.map((type) => ({
+      category: snakeCase(type.name),
+      status: 'BELUM_LUNAS',
+    }));
+
+    student.payments.forEach((payment) => {
+      const key = snakeCase(payment.type?.name);
+      const index = payments.findIndex((p) => p.category === key);
+
+      // tentukan status dulu
+      const paymentStatus =
+        payment.status === PaymentStatus.LUNAS
+          ? 'LUNAS'
+          : payment.status === PaymentStatus.BELUM_LUNAS
+          ? 'BELUM_LUNAS'
+          : 'TUNGGAKAN';
+
+      // update jika kategori ditemukan
+      if (index !== -1) {
+        payments[index].status = paymentStatus;
+      }
     });
 
-    const paymentTypes = await this.paymentTypeRepo.find();
+    return { name: student.name, payments };
+  });
 
-    const result = students.map((student) => {
-      const payments = paymentTypes.map((type) => ({
-        category: snakeCase(type.name),
-        status: 'BELUM_LUNAS',
-      }));
+  return this._success({ data: result });
+}
 
-      student.payments.forEach((payment) => {
-        const key = snakeCase(payment.type?.name);
-        const index = payments.findIndex((p) => p.category === key);
-        if (index !== -1) {
-          payments[index].status =
-            payment.status === PaymentStatus.LUNAS
-              ? 'LUNAS'
-              : payment.status === PaymentStatus.BELUM_LUNAS
-              ? 'BELUM_LUNAS'
-              : 'TUNGGAKAN';
-        }
-  
-        payments.push({ category: key, status });
-      });
-
-      return { name: student.name, payments };
-    });
-
-    return this._success({ data: result });
-  }
 }

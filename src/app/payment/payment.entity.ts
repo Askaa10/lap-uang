@@ -82,9 +82,9 @@ export class Payment {
   histories: PaymentHistory[];
   // -> Payment HAS MANY history, bukan many-to-one
 
-  @Column()
+  @Column({ type: 'int', default: 0 })
   remainder: number;
 
-  @Column()
+  @Column({ type: 'int', default: 0 })
   paid: number;
 }

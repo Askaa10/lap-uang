@@ -8,7 +8,9 @@ import { Student } from 'src/app/student/student.entity';
 import { PaymentType } from '../payment-type/payment-type.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PaymentHistory, Payment, Student, PaymentType])],
+  imports: [
+    TypeOrmModule.forFeature([PaymentHistory, Payment, Student, PaymentType]),
+  ],
   providers: [PaymentHistoryService],
   controllers: [PaymentHistoryController],
   exports: [PaymentHistoryService],

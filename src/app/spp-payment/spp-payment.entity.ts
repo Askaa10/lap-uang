@@ -59,9 +59,9 @@ export class SppPayment {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column()
+  @Column({ type: 'int', default: 0 })
   remainder: number;
 
-  @Column()
+  @Column({ type: 'int', default: 0 })
   paid: number;
 }

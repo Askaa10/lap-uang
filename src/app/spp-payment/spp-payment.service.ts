@@ -20,17 +20,16 @@ export class SppPaymentService extends BaseResponse {
 
   async getSppRekap(yearBefore: string, yearNext: string) {
     // Ambil semua siswa
-    const students = await this.studentRepo.find(
-      {where : {isDelete : false}}
-    );
-
+    const students = await this.studentRepo.find({
+      where: { isDelete: false },
+    });
+  
     // Ambil semua pembayaran SPP tahun tertentu
     const payments = await this.sppPaymentRepository.find({
       where: { year: Between(yearBefore, yearNext) },
       relations: ['student'],
     });
-
-    // Bulan dalam bahasa Indonesia
+  
     const months = [
       'Januari',
       'Februari',
@@ -45,31 +44,28 @@ export class SppPaymentService extends BaseResponse {
       'November',
       'Desember',
     ];
-
-    // Mapping ke bentuk tabel per siswa
+  
     const result = students.map((student) => {
-      // filter pembayaran per siswa
       const studentPayments = payments.filter(
         (p) => p.studentId === student.id,
       );
-
-      // buat object { Januari: status, Februari: status, ... }
+  
       const monthData = {};
       for (const m of months) {
         const payment = studentPayments.find((p) => p.month === m);
         monthData[m.toLowerCase()] = payment ? payment.status : 'BELUM_BAYAR';
       }
-
+  
       return {
-        nama: student.name, // asumsikan entity Student ada kolom `name`
+        nama: student.name,
+        generation: student.generation, // ⬅️ DITAMBAHKAN DI SINI
         ...monthData,
       };
     });
-
+  
     return this._success({
       data: result,
-      included: ["student", "spp-payment"],
-      
+      included: ['student', 'spp-payment'],
     });
   }
 

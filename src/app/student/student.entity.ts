@@ -12,6 +12,7 @@ import { Major, ProgramType, StudentStatus } from './student.enum';
 
 import { SppPayment } from '../spp-payment/spp-payment.entity';
 import { PaymentType } from '../payment/payment-type/payment-type.entity';
+import { PaymentHistory } from '../payment/payment-history/payment-history.entity';
 
 // Define or import the Major enum
 
@@ -63,6 +64,9 @@ export class Student {
   @ManyToMany(() => PaymentType, (paymentType) => paymentType.students)
   paymentTypes: PaymentType[];
 
+  @OneToMany(() => PaymentHistory, (history) => history.student)
+paymentHistories: PaymentHistory[];
+  
   
 
 }

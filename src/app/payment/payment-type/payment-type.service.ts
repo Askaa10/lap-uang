@@ -8,8 +8,9 @@ import { In, Repository } from 'typeorm';
 import { PaymentType } from './payment-type.entity';
 import { CreatePaymentTypeDto, UpdatePaymentTypeDto } from './payment-type.dto';
 import { BaseResponse } from '../../../utils/response/base.response';
-import { Student } from '../../student/student.entity'; // ✅ import Student
-import { Payment } from '../payment.entity';
+import { Student } from '../../student/student.entity';
+import { Payment, PaymentStatus } from '../payment.entity';
+import { CategoryTypes } from './payment-type.enum';
 
 @Injectable()
 export class PaymentTypeService extends BaseResponse {
@@ -18,7 +19,7 @@ export class PaymentTypeService extends BaseResponse {
     private readonly repo: Repository<PaymentType>,
 
     @InjectRepository(Student)
-    private readonly studentRepo: Repository<Student>, // ✅ tambahkan repository Student
+    private readonly studentRepo: Repository<Student>,
 
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
@@ -26,29 +27,58 @@ export class PaymentTypeService extends BaseResponse {
     super();
   }
 
-  // ✅ saat membuat PaymentType baru, semua siswa otomatis ditambahkan
+  // ==========================================================
+  //    ⛳  AUTO GENERATE PAYMENT
+  // ==========================================================
+  private async generatePayments(paymentType: PaymentType, students: Student[]) {
+    const payments = students.map((student) => {
+  
+      // Cek tipe payment type
+      const initialStatus =
+        paymentType.type === CategoryTypes.INSTALLMENT
+          ? PaymentStatus.NYICIL     // <--- kalau instalment, status nyicil
+          : PaymentStatus.BELUM_LUNAS;
+  
+      return this.paymentRepo.create({
+        studentId: student.id,
+        student,
+        type: paymentType,
+        amount: paymentType.nominal,
+        status: initialStatus,         // <--- pakai status otomatis
+        paid: 0,
+        remainder: paymentType.nominal,
+  
+        // opsional (jika kamu mau)
+        date: new Date(),
+        method: 'NORMAL',
+        
+      } as Partial<Payment>);
+    });
+  
+    await this.paymentRepo.save(payments);
+  
+    console.log(`✅ Generated ${payments.length} payments`);
+  }
+
+  // ==========================================================
+  //    CREATE PAYMENT TYPE
+  // ==========================================================
   async create(dto: CreatePaymentTypeDto) {
     let students = [];
 
     console.log('👉 studentIds dari FE:', dto.studentIds);
 
     if (Array.isArray(dto.studentIds) && dto.studentIds.length > 0) {
-      // ✅ Ambil siswa berdasarkan ID yang dikirim
       students = await this.studentRepo.findBy({
         id: In(dto.studentIds),
       });
 
       if (students.length === 0) {
-        throw new NotFoundException(
-          'Siswa tidak ditemukan untuk ID yang dikirim',
-        );
+        throw new NotFoundException('Siswa tidak ditemukan untuk ID yang dikirim');
       }
     } else {
-      // ✅ Jika tidak dikirim, ambil semua siswa
-      console.log(
-        '⚠️ Tidak ada studentIds dikirim — otomatis ambil semua siswa',
-      );
-      students = await this.studentRepo.find(); // ambil semua siswa di database
+      console.log('⚠️ Tidak ada studentIds dikirim — otomatis ambil semua siswa');
+      students = await this.studentRepo.find();
     }
 
     const paymentType = this.repo.create({
@@ -57,6 +87,11 @@ export class PaymentTypeService extends BaseResponse {
     });
 
     const saved = await this.repo.save(paymentType);
+
+    // =======================================================
+    //   ⛳ AUTO GENERATE PAYMENT UNTUK SEMUA SISWA
+    // =======================================================
+    await this.generatePayments(saved, students);
 
     return {
       success: true,
@@ -67,13 +102,38 @@ export class PaymentTypeService extends BaseResponse {
       data: saved,
     };
   }
+
+  // ==========================================================
+  //   FIND ALL WITH STATUS
+  // ==========================================================
   async findAllWithPaymentStatus() {
     const result = await this.repo.find({
-      relations: ['students'],
+      relations: ['students', 'payments', 'payments.student'],
     });
+
+    const finalData = result.map((pt) => {
+      const payments = pt.payments || [];
+
+      const studentsWithStatus = pt.students.map((student) => {
+        const payment = payments.find(
+          (p) => p.student && p.student.id === student.id
+        );
+
+        const status = payment?.status || 'Belum_lunas';
+
+        return { ...student, status };
+      });
+
+      return {
+        ...pt,
+        type: pt.type,
+        students: studentsWithStatus,
+      };
+    });
+
     return this._success({
       auth: null,
-      data: result,
+      data: finalData,
       errors: null,
       links: { self: '/payment-types/with-status' },
       included: null,
@@ -84,8 +144,11 @@ export class PaymentTypeService extends BaseResponse {
     });
   }
 
+  // ==========================================================
+  //   FIND ALL
+  // ==========================================================
   async findAll() {
-    const types = await this.repo.find({ relations: ['students'] }); // ✅ tampilkan relasi students
+    const types = await this.repo.find({ relations: ['students'] });
     return this._success({
       auth: null,
       data: types,
@@ -99,12 +162,16 @@ export class PaymentTypeService extends BaseResponse {
     });
   }
 
+  // ==========================================================
+  //   FIND ONE
+  // ==========================================================
   async findOne(id: string) {
     const found = await this.repo.findOne({
       where: { id },
       relations: ['students'],
-    }); // ✅ tampilkan siswa terkait
+    });
     if (!found) throw new NotFoundException('Payment type not found');
+
     return this._success({
       auth: null,
       data: found,
@@ -118,39 +185,51 @@ export class PaymentTypeService extends BaseResponse {
     });
   }
 
+  // ==========================================================
+  //   UPDATE PAYMENT TYPE
+  // ==========================================================
   async update(id: string, dto: UpdatePaymentTypeDto) {
     const existing = await this.repo.findOne({
       where: { id },
       relations: ['students'],
     });
+
     if (!existing) throw new NotFoundException('Payment type not found');
 
-    // update field biasa
     Object.assign(existing, dto);
 
-    // kalau ada update studentIds
-    if (dto.studentIds) {
-      const students = await this.studentRepo.findBy({
+    let students = [];
+
+    if (Array.isArray(dto.studentIds) && dto.studentIds.length > 0) {
+      students = await this.studentRepo.findBy({
         id: In(dto.studentIds),
       });
-      existing.students = students;
+
+      if (students.length === 0) {
+        throw new NotFoundException('Siswa tidak ditemukan untuk ID yang dikirim');
+      }
+    } else {
+      students = await this.studentRepo.find({
+        where: { isDelete: false },
+      });
     }
 
-    const updated = await this.repo.save(existing);
+    existing.students = students;
+
+    const saved = await this.repo.save(existing);
 
     return this._success({
-      auth: null,
-      data: updated,
-      errors: null,
-      links: { self: `/payment-types/update/${id}` },
-      included: null,
+      data: saved,
       message: {
-        id: 'Data berhasil diperbarui',
-        en: 'Data updated successfully',
+        id: `Payment type berhasil diperbarui untuk ${students.length} siswa`,
+        en: `Payment type updated for ${students.length} students`,
       },
     });
   }
 
+  // ==========================================================
+  //   DELETE
+  // ==========================================================
   async remove(id: string) {
     const found = await this.repo.findOne({ where: { id } });
     if (!found) throw new NotFoundException('Payment type not found');

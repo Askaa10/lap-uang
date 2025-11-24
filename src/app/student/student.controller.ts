@@ -17,7 +17,7 @@ export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
   // CREATE student + auto generate 36 bulan payment SPP
-  @Post("create")
+  @Post('create')
   async create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentService.create(createStudentDto);
   }

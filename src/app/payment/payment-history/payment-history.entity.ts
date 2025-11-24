@@ -38,7 +38,7 @@ import {
     @Column()
     studentId: string;
 
-    @ManyToOne(() => Student, (student) => student.payments, {
+    @ManyToOne(() => Student, (student) => student.paymentHistories, {
       onDelete: 'CASCADE',
     })
     @JoinColumn({ name: 'studentId' })

@@ -85,6 +85,10 @@ export class PaymentController {
   async getPaymentsByCNS(@Param('ids') ids: string, @Param('idc') idc: string) {
     return this.paymentService.getPaymentsByCNS(ids, idc);
   }
+  @Get('tagihan/:nisn')
+  getTagihan(@Param('nisn') nisn: string) {
+    return this.paymentService.getTagihanByNisn(nisn);
+  }
 
   @Delete('delete/:id')
   remove(@Param('id') id: string) {

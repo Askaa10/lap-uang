@@ -31,10 +31,10 @@ export class ExpenseController {
 
   @Get('/:ct')
   async getByCategory(
-    @Param('ct') categoryId: string,
+    @Param('ct') categoryName: string,
     @Query() query: any,
   ) {
-    return this.service.findByCategory(categoryId, query);
+    return this.service.getAll(categoryName, query);
   }
 
   @Get(':id')

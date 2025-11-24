@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinTable, ManyToMany } from 'typeorm';
 import { Payment } from '../payment.entity';
 import { CategoryTypes } from './payment-type.enum';
-import { Student } from 'src/app/student/student.entity';
+import { Student } from '../../student/student.entity';
+import { PaymentHistory } from '../payment-history/payment-history.entity';
 
 
 @Entity()
