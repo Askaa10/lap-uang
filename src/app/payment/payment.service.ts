@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Payment, PaymentStatus } from './payment.entity';
@@ -7,10 +7,14 @@ import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
 import { BaseResponse } from 'src/utils/response/base.response';
 import { Student } from '../student/student.entity';
 import { snakeCase } from 'lodash';
+import { SppPayment } from '../spp-payment/spp-payment.entity';
+import { PaymentHistory } from './payment-history/payment-history.entity';
 
 @Injectable()
 export class PaymentService extends BaseResponse {
   constructor(
+    @InjectRepository(PaymentHistory)
+    private readonly paymentHistoryRepo: Repository<PaymentHistory>,
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
 
@@ -19,6 +23,8 @@ export class PaymentService extends BaseResponse {
 
     @InjectRepository(PaymentType)
     private readonly paymentTypeRepo: Repository<PaymentType>,
+    @InjectRepository(SppPayment)
+    private readonly paymentSPPRepo: Repository<SppPayment>,
   ) {
     super();
   }
@@ -43,6 +49,41 @@ export class PaymentService extends BaseResponse {
       message: { en: 'Payment created successfully', id: 'Pembayaran berhasil dibuat' },
       data: saved,
     });
+  }
+
+  async getTagihanSakuSaku(NISN: string, secureCode) {
+
+    if (secureCode !== "mqmaju123") {
+      throw new HttpException("Gagal Ambil data karena code salah", 401)
+    }
+    const payment = await this.paymentRepo.find({
+      where: { student: { NISN , }, status: PaymentStatus.BELUM_LUNAS },
+      relations: ['type'], 
+    })
+
+    const spp = await this.paymentSPPRepo.find({
+      where: { student: { NISN }, status: "BELUM_LUNAS" },
+      relations: [],
+    })
+    const sppDone = await this.paymentSPPRepo.find({
+      where: { student: { NISN }, status: "LUNAS" },
+      relations: [],
+    })
+
+    const history = await this.paymentHistoryRepo.find({
+      where: {student:{NISN}}
+    })
+
+    return this._success({
+      data: {
+        oltherPayments: payment,
+        sppPayment: spp,
+        history: {
+          spp: sppDone,
+          olther: history
+        }
+      }
+    })
   }
 
   // ✅ CREATE BULK

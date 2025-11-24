@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, ILike, Repository } from 'typeorm';
 import { Expense } from './expense.entity';
 import { BaseResponse } from '../../utils/response/base.response';
 import { CreateExpenseDto } from './expense.dto';
@@ -74,24 +74,106 @@ export class ExpenseService extends BaseResponse {
     const saved = await this.expenseRepo.save(entities);
     return this._success({ data: saved });
   }
+  async findAllByFilter(query: any) {
+    const { startDate, endDate, keyword, limit = 10, page = 1 } = query;
+
+    const qb = this.expenseRepo
+      .createQueryBuilder('expense')
+      .leftJoinAndSelect('expense.category', 'category')
+      .leftJoinAndSelect('expense.subCategory', 'subCategory')
+      .where('expense.isDelete = :isDelete', { isDelete: false })
+      .orderBy('expense.PayDate', 'DESC') // terbaru ke lama
+      .take(Number(limit))
+      .skip((Number(page) - 1) * Number(limit));
+
+    // --- Filter tanggal ---
+    if (startDate && endDate) {
+      qb.andWhere('expense.PayDate BETWEEN :start AND :end', {
+        start: new Date(startDate),
+        end: new Date(endDate),
+      });
+    }
+
+    // --- Filter keyword ---
+    if (keyword) {
+      qb.andWhere(
+        `(expense.description LIKE :key 
+        OR expense.pihakPenerima LIKE :key 
+        OR expense.PenanggungJawab LIKE :key)`,
+        { key: `%${keyword}%` },
+      );
+    }
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      message: 'Success',
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      data,
+    };
+  }
 
   /**
    * ✅ Get all expenses (exclude soft deleted)
    */
-  async getAll(categoryName?: string) {
-    const data = await this.expenseRepo.find({
-      where: {
+  async getAll(categoryName?: string, query?: any) {
+    const { startDate, endDate, keyword, limit = 20, page = 1 } = query;
+
+    // Base condition (selalu ada)
+    const base = {
+      isDelete: false,
+      category: {
         isDelete: false,
-        category: {
-          isDelete: false,
-          ...(categoryName ? { name: categoryName.toLowerCase() } : {}),
-        },
+        ...(categoryName ? { name: categoryName.toLowerCase() } : {}),
       },
-      relations: ['category', "subCategory"],
-      order: { createdAt: 'DESC' },
+    };
+
+    // --- FILTER TANGGAL ---
+    if (startDate && endDate) {
+      base['PayDate'] = Between(new Date(startDate), new Date(endDate));
+    }
+
+    let where: any = base;
+
+    // --- FILTER KEYWORD MULTI FIELD ---
+    if (keyword) {
+      const key = ILike(`%${keyword}%`);
+
+      where = [
+        { ...base, description: key },
+        { ...base, pihakPenerima: key },
+        { ...base, PenanggungJawab: key },
+        // { ...base, itemCount: key },
+        { ...base, sumber_dana: key },
+        // { ...base, ukuran: key },
+        // { ...base, satuanUkuran: key },
+        // { ...base, category: { ...base.category, decs: key } },
+        // { ...base, category: { ...base.category, name: key } },
+        // { ...base, subCategory: { name: key } },
+      ];
+    }
+
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
+
+    const [data, total] = await this.expenseRepo.findAndCount({
+      where,
+      relations: ['category', 'subCategory'],
+      order: { PayDate: 'DESC' },
+      take,
+      skip,
     });
 
-    return this._success({ data });
+    return this._success({
+      data: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        data,
+      },
+    });
   }
 
   /**

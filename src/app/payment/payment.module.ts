@@ -11,11 +11,12 @@ import { PaymentScheduler } from './payment.scheduler';
 import { PaymentHistoryService } from './payment-history/payment-history.service';
 import { PaymentHistoryController } from './payment-history/payment-history.controller';
 import { PaymentHistory } from './payment-history/payment-history.entity';
+import { SppPayment } from '../spp-payment/spp-payment.entity';
 // import { PaymentHistoryModule } from './payment-history/payment-history.module';
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payment,PaymentType,Student, PaymentHistory]), ],
+  imports: [TypeOrmModule.forFeature([Payment,PaymentType,Student, PaymentHistory, SppPayment]), ],
   controllers: [PaymentController, PaymentTypeController, PaymentHistoryController],
   providers: [PaymentService, PaymentTypeService, PaymentScheduler, PaymentHistoryService],
 })
