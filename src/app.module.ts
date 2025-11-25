@@ -11,7 +11,6 @@ import { ReceiptsModule } from './app/receipts/receipts.module';
 import { ExpenseModule } from './app/expense/expense.module';
 import { InitialBalanceModule } from './app/initial-balance/initial-balance.module';
 import { CloudinaryModule } from './app/cloudinary/cloudinary.module';
-import { UploadModule } from './app/upload/upload.module';
 import { SppPaymentModule } from './app/spp-payment/spp-payment.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ProfileModule } from './app/profile/profile.module';
