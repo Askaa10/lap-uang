@@ -33,8 +33,18 @@ export class StudentService {
     const sppList: SppPayment[] = [];
     const startDate = new Date();
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
 
     for (let i = 0; i < 36; i++) {
@@ -46,10 +56,12 @@ export class StudentService {
       sppPayment.studentId = savedStudent.id;
       sppPayment.month = months[date.getMonth()];
       sppPayment.year = date.getFullYear().toString();
-      sppPayment.nominal = 0;
+      sppPayment.nominal =
+        savedStudent.tipeProgram == 'FULLDAY' ? 1000000 : 2500000;
       sppPayment.status = 'BELUM_LUNAS';
       sppPayment.paidAt = null;
-      sppPayment.remainder = 0;
+      sppPayment.remainder =
+        savedStudent.tipeProgram == 'FULLDAY' ? 1000000 : 2500000;
       sppPayment.paid = 0;
 
       sppList.push(sppPayment);

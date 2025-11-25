@@ -7,12 +7,22 @@ import {
   Query,
   Param,
   UseGuards,
+  HttpException,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDTO, ResetPasswordDTO } from './auth.dto';
+import {
+  LoginDTO,
+  ResetPasswordDto,
+  VerifyResetTokenDto,
+  ForgotPasswordDto,
+  ChangePasswordDto,
+} from './auth.dto';
 import { JwtGuard } from './auth.guard';
 import { Roles } from '../../decorators/roles.decorator';
 import { RolesGuard } from './roles.guard';
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -24,22 +34,10 @@ export class AuthController {
   async profile(@Param('id') id: string) {
     return await this.authService.myProfile(id);
   }
-  
+
   @Post('login')
   async login(@Body() userLogin: LoginDTO) {
     return await this.authService.login(userLogin);
-  }
-
-  @Post('change-password')
-  changePassword(
-    @Body()
-    userChangePassword: {
-      email: string;
-      oldPassword: string;
-      newPassword: string;
-    },
-  ) {
-    return this.authService.changePassword(userChangePassword);
   }
 
   @Post('register')
@@ -48,17 +46,34 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  async forgotPassowrd(@Body('email') email: string) {
-    console.log('email', email);
-    return this.authService.forgotPassword(email);
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
   }
 
-  @Post('reset-password/:user_id/:token') // url yang dibuat pada endpont harus sama dengan ketika kita membuat link pada service forgotPassword
-  async resetPassword(
-    @Param('user_id') user_id: string,
-    @Param('token') token: string,
-    @Body() payload: ResetPasswordDTO,
+  @Post('verify-reset-token')
+  @HttpCode(HttpStatus.OK)
+  async verifyResetToken(
+    @Body('email') email: string,
+    @Body() dto: VerifyResetTokenDto,
   ) {
-    return this.authService.resetPassword(user_id, token, payload);
+    return this.authService.verifyResetToken(email, dto.token);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body('resetSessionId') resetSessionId: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.authService.resetPasswordWithSession(resetSessionId, newPassword);
+  }
+
+  
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
+    // const userId = req.user.id;
+    return this.authService.changePassword(dto);
   }
 }

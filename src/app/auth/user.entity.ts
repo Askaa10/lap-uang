@@ -27,9 +27,7 @@ export class User {
   @Column({ type: 'enum', enum: Role, default: Role.ADMIN })
   role: Role;
 
-
-
-  @Column({ nullable: true, type:'varchar', length: 1024 })
+  @Column({ nullable: true, type: 'varchar', length: 1024 })
   refresh_token?: string;
 
   @CreateDateColumn()
@@ -40,5 +38,7 @@ export class User {
 
   @OneToMany(() => ResetPassword, (resetPassword) => resetPassword.user)
   resetPasswords: ResetPassword[];
-  
+
+  @Column({ nullable: true })
+  resetSessionId: string ;
 }

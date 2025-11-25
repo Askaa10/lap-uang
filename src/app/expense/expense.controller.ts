@@ -15,7 +15,7 @@ import { CreateExpenseDto } from './expense.dto';
 @Controller('expense')
 export class ExpenseController {
   constructor(private readonly service: ExpenseService) {}
-
+  @Get('')
   @Post()
   create(@Body() dto: CreateExpenseDto) {
     return this.service.createExpense(dto);
@@ -29,11 +29,12 @@ export class ExpenseController {
     return this.service.createMany(dtos);
   }
 
-  @Get("/:ct")
-  async getAll(
-    @Param('ct') categoryName?: string,
+  @Get('/:ct')
+  async getByCategory(
+    @Param('ct') categoryName: string,
+    @Query() query: any,
   ) {
-    return this.service.getAll(categoryName);
+    return this.service.getAll(categoryName, query);
   }
 
   @Get(':id')

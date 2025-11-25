@@ -76,6 +76,11 @@ export class PaymentController {
     );
   }
 
+  @Get("tagihan/sakusaku/:NISN/:code")
+  async getTagihanSakuSaku(@Param('NISN') NISN: string, @Param("code") code:string) {
+    return await this.paymentService.getTagihanSakuSaku(NISN,code )
+  }
+
   @Get('/filter/:ids/:idc')
   async getPaymentsByCNS(@Param('ids') ids: string, @Param('idc') idc: string) {
     return this.paymentService.getPaymentsByCNS(ids, idc);
