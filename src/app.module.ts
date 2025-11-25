@@ -28,14 +28,12 @@ import { MailModule } from './mail/mail.module';
     }),
     MailerModule,
     TypeOrmModule.forRootAsync({
-
       useFactory: async () => {
         const { typeOrmConfig } = await import('./config/typeorm.config');
         return { ...typeOrmConfig, synchronize: true, autoLoadEntities: true };
       },
     }),
-        ScheduleModule.forRoot(),
-    
+    ScheduleModule.forRoot(),
     AuthModule,
     MailModule,
     SppPaymentModule,
@@ -45,7 +43,7 @@ import { MailModule } from './mail/mail.module';
     ReceiptsModule,
     ExpenseModule,
     InitialBalanceModule,
-    CloudinaryModule,
+    // CloudinaryModule,
     SppPaymentModule,
     ProfileModule,
   ],
