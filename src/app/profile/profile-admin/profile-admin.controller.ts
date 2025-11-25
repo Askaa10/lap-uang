@@ -23,15 +23,15 @@ export class ProfileAdminController {
   update(@Body() dto: UpdateSchoolProfileDto) {
     return this.service.updateSchoolProfile(dto);
   }
-  @Patch('avatar')
-  @UseInterceptors(FileInterceptor('avatar'))
-  uploadAvatar(@UploadedFile() file: Express.Multer.File) {
-    return this.service.updateAvatar(`/uploads/${file.filename}`);
-  }
+  // @Patch('avatar')
+  // @UseInterceptors(FileInterceptor('avatar'))
+  // uploadAvatar(@UploadedFile() file: Express.Multer.File) {
+  //   return this.service.updateAvatar(`/uploads/${file.filename}`);
+  // }
 
-  @Patch('banner')
-  @UseInterceptors(FileInterceptor('banner'))
-  uploadBanner(@UploadedFile() file: Express.Multer.File) {
-    return this.service.updateBanner(`/uploads/${file.filename}`);
-  }
+  // @Patch('banner')
+  // @UseInterceptors(FileInterceptor('banner'))
+  // uploadBanner(@UploadedFile() file: Express.Multer.File) {
+  //   return this.service.updateBanner(`/uploads/${file.filename}`);
+  // }
 }

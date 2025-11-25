@@ -26,14 +26,14 @@ export class ProfileUserController {
     return this.service.updateUserProfile(id, dto);
   }
 
-  @Patch('avatar/:id')
-  @UseInterceptors(FileInterceptor('avatar', { storage: cloudinaryStorage }))
-  async uploadAvatar(
-    @Param('id') id: number,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return this.service.updateUserAvatar(id, file.path);
-  }
+  // @Patch('avatar/:id')
+  // @UseInterceptors(FileInterceptor('avatar', { storage: cloudinaryStorage }))
+  // async uploadAvatar(
+  //   @Param('id') id: number,
+  //   @UploadedFile() file: Express.Multer.File,
+  // ) {
+  //   return this.service.updateUserAvatar(id, file.path);
+  // }
 
   @Patch('password/:id')
   updatePassword(@Param('id') id: number, @Body('password') password: string) {
