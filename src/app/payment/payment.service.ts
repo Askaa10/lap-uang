@@ -150,12 +150,12 @@ export class PaymentService extends BaseResponse {
 
     return this._success({
       message: { en: 'Payment fetched successfully', id: 'Pembayaran berhasil diambil' },
-      data: formatted
-      message: {
-        en: 'Payment fetched successfully',
-        id: 'Pembayaran berhasil diambil',
-      },
-      data: [...payments, ...sppPayment],
+      data: formatted,
+      // message: {
+      //   en: 'Payment fetched successfully',
+      //   id: 'Pembayaran berhasil diambil',
+      // },
+      // data: [...payments, ...sppPayment],
     });
   }
 
@@ -302,7 +302,7 @@ export class PaymentService extends BaseResponse {
       }
 
       const bayar = Number(jumlah);
-      const updatedRemainder = py.amount - bayar;
+      const updatedRemainder = py.remainder - bayar;
 
       // Hitung refund jika overpay
       let refund = 0;
