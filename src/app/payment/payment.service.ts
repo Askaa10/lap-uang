@@ -1,6 +1,11 @@
-import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, MoreThan, Repository } from 'typeorm';
 import { Payment, PaymentStatus } from './payment.entity';
 import { PaymentType } from './payment-type/payment-type.entity';
 import { CreatePaymentDto, UpdatePaymentDto } from './payment.dto';
@@ -8,7 +13,10 @@ import { BaseResponse } from 'src/utils/response/base.response';
 import { Student } from '../student/student.entity';
 import { snakeCase } from 'lodash';
 import { SppPayment } from '../spp-payment/spp-payment.entity';
-import { PaymentHistory } from './payment-history/payment-history.entity';
+import {
+  PaymentHistory,
+  PaymentHistoryStatus,
+} from './payment-history/payment-history.entity';
 
 @Injectable()
 export class PaymentService extends BaseResponse {
@@ -26,7 +34,7 @@ export class PaymentService extends BaseResponse {
 
     @InjectRepository(SppPayment)
     private readonly sppPaymentRepo: Repository<SppPayment>,
-    
+
     @InjectRepository(SppPayment)
     private readonly paymentSPPRepo: Repository<SppPayment>,
   ) {
@@ -37,10 +45,10 @@ export class PaymentService extends BaseResponse {
   async create(dto: CreatePaymentDto) {
     const student = await this.studentRepo.findOneBy({ id: dto.studentId });
     if (!student) throw new NotFoundException('Student not found');
-  
+
     const type = await this.paymentTypeRepo.findOneBy({ id: dto.typeId });
     if (!type) throw new NotFoundException('Payment type not found');
-  
+
     // 🔍 Ambil semua payment sebelumnya untuk jenis pembayaran ini
     const previousPayments = await this.paymentRepo.find({
       where: {
@@ -48,23 +56,25 @@ export class PaymentService extends BaseResponse {
         type: { id: dto.typeId },
       },
     });
-  
+
     const alreadyPaid = previousPayments.reduce((sum, p) => sum + p.paid, 0);
     const totalPaid = alreadyPaid + dto.amount;
-  
+
     if (totalPaid > type.nominal) {
-      throw new BadRequestException('Jumlah pembayaran melebihi total nominal!');
+      throw new BadRequestException(
+        'Jumlah pembayaran melebihi total nominal!',
+      );
     }
-  
+
     // 💰 Hitung status & remainder
     let status = PaymentStatus.BELUM_LUNAS;
     let remainder = type.nominal - totalPaid;
-  
+
     if (totalPaid === type.nominal) {
       status = PaymentStatus.LUNAS;
       remainder = 0;
     }
-  
+
     const payment = this.paymentRepo.create({
       ...dto,
       student,
@@ -73,11 +83,14 @@ export class PaymentService extends BaseResponse {
       remainder,
       status,
     });
-  
+
     const saved = await this.paymentRepo.save(payment);
-  
+
     return this._success({
-      message: { en: 'Payment created successfully', id: 'Pembayaran berhasil dibuat' },
+      message: {
+        en: 'Payment created successfully',
+        id: 'Pembayaran berhasil dibuat',
+      },
       data: {
         ...saved,
         type,
@@ -93,49 +106,48 @@ export class PaymentService extends BaseResponse {
       relations: ['student'],
       where: {
         status: PaymentStatus.BELUM_LUNAS,
-        student: { NISN: nisn }
-      }
+        student: { NISN: nisn },
+      },
     });
-  
+
     const sppPayment = await this.sppPaymentRepo.find({
       relations: ['student'],
       where: {
         status: 'BELUM_LUNAS',
-        student: { NISN : nisn }
-      }
+        student: { NISN: nisn },
+      },
     });
-  
+
     return this._success({
-      message: { en: 'Payment fetched successfully', id: 'Pembayaran berhasil diambil' },
-      data: [
-        ...payments,
-        ...sppPayment,
-      ],
+      message: {
+        en: 'Payment fetched successfully',
+        id: 'Pembayaran berhasil diambil',
+      },
+      data: [...payments, ...sppPayment],
     });
   }
 
   async getTagihanSakuSaku(NISN: string, secureCode) {
-
-    if (secureCode !== "mqmaju123") {
-      throw new HttpException("Gagal Ambil data karena code salah", 401)
+    if (secureCode !== 'mqmaju123') {
+      throw new HttpException('Gagal Ambil data karena code salah', 401);
     }
     const payment = await this.paymentRepo.find({
-      where: { student: { NISN , }, status: PaymentStatus.BELUM_LUNAS },
-      relations: ['type'], 
-    })
+      where: { student: { NISN }, status: PaymentStatus.BELUM_LUNAS },
+      relations: ['type'],
+    });
 
     const spp = await this.paymentSPPRepo.find({
-      where: { student: { NISN }, status: "BELUM_LUNAS" },
+      where: { student: { NISN }, status: 'BELUM_LUNAS' },
       relations: [],
-    })
+    });
     const sppDone = await this.paymentSPPRepo.find({
-      where: { student: { NISN }, status: "LUNAS" },
+      where: { student: { NISN }, paid: MoreThan(0) },
       relations: [],
-    })
+    });
 
     const history = await this.paymentHistoryRepo.find({
-      where: {student:{NISN}}
-    })
+      where: { student: { NISN } },
+    });
 
     return this._success({
       data: {
@@ -143,10 +155,184 @@ export class PaymentService extends BaseResponse {
         sppPayment: spp,
         history: {
           spp: sppDone,
-          olther: history
+          olther: history,
+        },
+      },
+    });
+  }
+
+  async bayarTagihanSakuSaku(body: any) {
+    const { jenis, nisn, jumlah, bulan, tahun, metode } = body;
+
+    const student = await this.studentRepo.findOne({
+      where: { NISN: nisn },
+    });
+
+    if (jenis.toLowerCase() === 'spp') {
+      const MONTHS_ORDER = [
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+
+      let paymentAmount = Number(jumlah);
+
+      // Ambil semua spp student
+      let sppList = await this.sppPaymentRepo.find({
+        where: { studentId: student.id },
+      });
+
+      // Filter list: hanya yang belum lunas
+      sppList = sppList.filter((spp) => spp.status !== 'LUNAS');
+
+      // Sort dengan prioritas:
+      // 1. Yang nyicil dulu
+      // 2. Baru yang belum bayar sama sekali
+      // 3. Urut tahun + bulan
+      const sorted = sppList.sort((a, b) => {
+        // Prioritas yang nyicil
+        if (a.paid > 0 && b.paid === 0) return -1;
+        if (a.paid === 0 && b.paid > 0) return 1;
+
+        // Kalau sama kategori, urut berdasarkan tahun dulu
+        if (a.year !== b.year) return Number(a.year) - Number(b.year);
+
+        // Lalu urut bulan
+        return MONTHS_ORDER.indexOf(a.month) - MONTHS_ORDER.indexOf(b.month);
+      });
+
+      // APPLY PAYMENT
+      for (const spp of sorted) {
+        if (paymentAmount <= 0) break;
+
+        const nominal = spp.nominal;
+        const alreadyPaid = spp.paid || 0;
+        const remaining = nominal - alreadyPaid;
+
+        if (remaining <= 0) continue; // skip kalau entah kenapa udah lunas
+
+        if (paymentAmount >= remaining) {
+          // Bayar full
+          spp.paid = nominal;
+          spp.remainder = 0;
+          spp.status = 'LUNAS';
+          spp.paidAt = new Date();
+
+          paymentAmount -= remaining;
+        } else {
+          // Partial payment
+          spp.paid += paymentAmount;
+          spp.remainder = nominal - spp.paid;
+          spp.status = 'BELUM_LUNAS';
+
+          paymentAmount = 0;
         }
+
+        await this.sppPaymentRepo.save(spp);
       }
-    })
+
+      return this._success({
+        message: {
+          en: 'success',
+          id: 'Pembayaran SPP berhasil diproses.',
+        },
+        data: body,
+      });
+    } else {
+      const pt = await this.paymentTypeRepo.findOne({
+        where: { name: jenis },
+      });
+
+      if (!pt) {
+        throw new HttpException('Tipe pembayaran tidak ditemukan', 404);
+      }
+
+      // Ambil pembayaran aktif siswa berdasar tipe
+      const py = await this.paymentRepo.findOne({
+        where: {
+          student: { NISN: nisn },
+          type: { id: pt.id },
+        },
+        relations: ['student', 'type'],
+      });
+
+      if (!py) {
+        throw new HttpException('Pembayaran tidak ditemukan', 404);
+      }
+
+      const bayar = Number(jumlah);
+      const updatedRemainder = py.amount - bayar;
+
+      // Hitung refund jika overpay
+      let refund = 0;
+      if (updatedRemainder < 0) {
+        refund = Math.abs(updatedRemainder);
+      }
+
+      // Simpan PaymentHistory dulu
+      const praHistory = {
+        paymentId: py.id,
+        studentId: py.student.id,
+        date: new Date(),
+        status:
+          updatedRemainder <= 0
+            ? PaymentHistoryStatus.LUNAS
+            : PaymentHistoryStatus.BELUM_LUNAS,
+        amount: bayar,
+        method: metode,
+        month: py.month,
+        year: tahun,
+        remainder: Math.max(updatedRemainder, 0), // biar ga minus di history
+        paid: bayar,
+        type: { id: pt.id } as any,
+      };
+
+      await this.paymentHistoryRepo.save(praHistory);
+
+      // Jika lunas → hapus payment dari list
+      if (updatedRemainder <= 0) {
+        await this.paymentRepo.delete(py.id);
+        return this._success({
+          message: {
+            en: "success",
+            id: "Pembayaran sudah lunas dan dihapus dari list"
+          },
+          data: {
+           refund,
+         }
+       })
+      } else {
+        // Jika belum lunas → update
+        await this.paymentRepo.update(
+          { id: py.id },
+          {
+            remainder: updatedRemainder,
+            paid: py.paid + bayar, // total paid cumulative
+          },
+        );
+        console.log('Payment masih nyicil, hanya update');
+      }
+
+      return this._success({
+        message: {
+          en: 'success',
+          id: 'Pembayaran berhasil diproses',
+        },
+        data: {
+          refund,
+        },
+      });
+    }
+
   }
 
   // ✅ CREATE BULK
@@ -171,7 +357,10 @@ export class PaymentService extends BaseResponse {
 
     if (validPayments.length === 0) {
       return this._success({
-        message: { en: 'No valid payments to create', id: 'Tidak ada pembayaran valid untuk dibuat' },
+        message: {
+          en: 'No valid payments to create',
+          id: 'Tidak ada pembayaran valid untuk dibuat',
+        },
         data: [],
       });
     }
@@ -179,7 +368,10 @@ export class PaymentService extends BaseResponse {
     const saved = await this.paymentRepo.save(validPayments);
 
     return this._success({
-      message: { en: 'Payments created successfully', id: 'Pembayaran berhasil dibuat' },
+      message: {
+        en: 'Payments created successfully',
+        id: 'Pembayaran berhasil dibuat',
+      },
       data: saved,
     });
   }
@@ -206,7 +398,10 @@ export class PaymentService extends BaseResponse {
     if (!payment) throw new NotFoundException('Payment not found');
 
     return this._success({
-      message: { en: 'Payment fetched successfully', id: 'Pembayaran berhasil diambil' },
+      message: {
+        en: 'Payment fetched successfully',
+        id: 'Pembayaran berhasil diambil',
+      },
       data: payment,
     });
   }
@@ -237,7 +432,10 @@ export class PaymentService extends BaseResponse {
     const saved = await this.paymentRepo.save(payment);
 
     return this._success({
-      message: { en: 'Payment updated successfully', id: 'Pembayaran berhasil diperbarui' },
+      message: {
+        en: 'Payment updated successfully',
+        id: 'Pembayaran berhasil diperbarui',
+      },
       data: {
         studentId: saved.student.id,
         typeId: saved.type.id,
@@ -250,13 +448,19 @@ export class PaymentService extends BaseResponse {
 
   // ✅ REMOVE PAYMENT
   async remove(id: string) {
-    const payment = await this.paymentRepo.findOne({ where: { id }, relations: ['student', 'type'] });
+    const payment = await this.paymentRepo.findOne({
+      where: { id },
+      relations: ['student', 'type'],
+    });
     if (!payment) throw new NotFoundException('Payment not found');
 
     await this.paymentRepo.remove(payment);
 
     return this._success({
-      message: { en: 'Payment deleted successfully', id: 'Pembayaran berhasil dihapus' },
+      message: {
+        en: 'Payment deleted successfully',
+        id: 'Pembayaran berhasil dihapus',
+      },
       data: payment,
     });
   }
@@ -269,39 +473,42 @@ export class PaymentService extends BaseResponse {
       order: { date: 'ASC' },
     });
 
-    const grouped = payments.reduce((acc, curr) => {
-      const key = curr.student.id;
+    const grouped = payments.reduce(
+      (acc, curr) => {
+        const key = curr.student.id;
 
-      if (!acc[key]) {
-        acc[key] = {
-          studentId: curr.student.id,
-          nama: curr.student.name,
-          tipeKategori: curr.type.name,
-          jumlahTagihan: curr.type.nominal,
-          jumlahPembayaran: curr.amount,
-          jumlahTransaksi: 1,
-          jumlahHarusDibayar: curr.type.nominal - curr.amount,
-          status:
-            curr.amount >= curr.type.nominal
+        if (!acc[key]) {
+          acc[key] = {
+            studentId: curr.student.id,
+            nama: curr.student.name,
+            tipeKategori: curr.type.name,
+            jumlahTagihan: curr.type.nominal,
+            jumlahPembayaran: curr.amount,
+            jumlahTransaksi: 1,
+            jumlahHarusDibayar: curr.type.nominal - curr.amount,
+            status:
+              curr.amount >= curr.type.nominal
+                ? PaymentStatus.LUNAS
+                : PaymentStatus.BELUM_LUNAS,
+            firstPaymentDate: curr.date,
+            lastPaymentDate: curr.date,
+          };
+        } else {
+          acc[key].jumlahPembayaran += curr.amount;
+          acc[key].jumlahTransaksi += 1;
+          acc[key].jumlahHarusDibayar =
+            acc[key].jumlahTagihan - acc[key].jumlahPembayaran;
+          acc[key].status =
+            acc[key].jumlahPembayaran >= acc[key].jumlahTagihan
               ? PaymentStatus.LUNAS
-              : PaymentStatus.BELUM_LUNAS,
-          firstPaymentDate: curr.date,
-          lastPaymentDate: curr.date,
-        };
-      } else {
-        acc[key].jumlahPembayaran += curr.amount;
-        acc[key].jumlahTransaksi += 1;
-        acc[key].jumlahHarusDibayar =
-          acc[key].jumlahTagihan - acc[key].jumlahPembayaran;
-        acc[key].status =
-          acc[key].jumlahPembayaran >= acc[key].jumlahTagihan
-            ? PaymentStatus.LUNAS
-            : PaymentStatus.BELUM_LUNAS;
-        acc[key].lastPaymentDate = curr.date;
-      }
+              : PaymentStatus.BELUM_LUNAS;
+          acc[key].lastPaymentDate = curr.date;
+        }
 
-      return acc;
-    }, {} as Record<string, any>);
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     const data = Object.values(grouped).map((item: any, i) => ({
       no: i + 1,
@@ -335,42 +542,41 @@ export class PaymentService extends BaseResponse {
   }
 
   // ✅ REKAP BULANAN
-async rekapBulanan(year: number) {
-  const students = await this.studentRepo.find({
-    where: { isDelete: false },
-    relations: ['payments', 'payments.type'],
-  });
-
-  const paymentTypes = await this.paymentTypeRepo.find();
-
-  const result = students.map((student) => {
-    const payments = paymentTypes.map((type) => ({
-      category: snakeCase(type.name),
-      status: 'BELUM_LUNAS',
-    }));
-
-    student.payments.forEach((payment) => {
-      const key = snakeCase(payment.type?.name);
-      const index = payments.findIndex((p) => p.category === key);
-
-      // tentukan status dulu
-      const paymentStatus =
-        payment.status === PaymentStatus.LUNAS
-          ? 'LUNAS'
-          : payment.status === PaymentStatus.BELUM_LUNAS
-          ? 'BELUM_LUNAS'
-          : 'TUNGGAKAN';
-
-      // update jika kategori ditemukan
-      if (index !== -1) {
-        payments[index].status = paymentStatus;
-      }
+  async rekapBulanan(year: number) {
+    const students = await this.studentRepo.find({
+      where: { isDelete: false },
+      relations: ['payments', 'payments.type'],
     });
 
-    return { name: student.name, payments };
-  });
+    const paymentTypes = await this.paymentTypeRepo.find();
 
-  return this._success({ data: result });
-}
+    const result = students.map((student) => {
+      const payments = paymentTypes.map((type) => ({
+        category: snakeCase(type.name),
+        status: 'BELUM_LUNAS',
+      }));
 
+      student.payments.forEach((payment) => {
+        const key = snakeCase(payment.type?.name);
+        const index = payments.findIndex((p) => p.category === key);
+
+        // tentukan status dulu
+        const paymentStatus =
+          payment.status === PaymentStatus.LUNAS
+            ? 'LUNAS'
+            : payment.status === PaymentStatus.BELUM_LUNAS
+              ? 'BELUM_LUNAS'
+              : 'TUNGGAKAN';
+
+        // update jika kategori ditemukan
+        if (index !== -1) {
+          payments[index].status = paymentStatus;
+        }
+      });
+
+      return { name: student.name, payments };
+    });
+
+    return this._success({ data: result });
+  }
 }

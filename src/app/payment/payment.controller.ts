@@ -81,6 +81,11 @@ export class PaymentController {
     return await this.paymentService.getTagihanSakuSaku(NISN,code )
   }
 
+  @Post("/bayar")
+  async bayarTagihanSakuSaku(@Body() payload:any) {
+    return await this.paymentService.bayarTagihanSakuSaku(payload)
+    }
+
   @Get('/filter/:ids/:idc')
   async getPaymentsByCNS(@Param('ids') ids: string, @Param('idc') idc: string) {
     return this.paymentService.getPaymentsByCNS(ids, idc);
