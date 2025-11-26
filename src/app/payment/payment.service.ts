@@ -102,23 +102,55 @@ export class PaymentService extends BaseResponse {
     });
   }
   async getTagihanByNisn(nisn: string) {
+    // TAGIHAN PAYMENT TYPE NORMAL
     const payments = await this.paymentRepo.find({
-      relations: ['student'],
+      relations: ['student', 'type'],
       where: {
         status: PaymentStatus.BELUM_LUNAS,
         student: { NISN: nisn },
       },
     });
+  
+    // TAGIHAN SPP
 
     const sppPayment = await this.sppPaymentRepo.find({
-      relations: ['student'],
+      relations: ['student'], // SPP tidak punya paymentType
       where: {
         status: 'BELUM_LUNAS',
         student: { NISN: nisn },
       },
     });
+  
+   
+    const formatted = [
+      ...payments.map((p) => ({
+        id: p.id,
+        namaPembayaran: p.type?.name,     // <-- nama payment type
+        kategori: p.type?.type,           // <-- kategori (BULANAN / INSTALMENT / NORMAL)
+        nominal: p.type?.nominal ?? p.amount,
+        amount: p.amount,
+        remainder: p.remainder,
+        status: p.status,
+        tanggalDibuat: p.createdAt,
+      })),
+  
+      ...sppPayment.map((spp) => ({
+        id: spp.id,
+        // namaPembayaran: `SPP Bulanan`,
+        kategori: "SPP",
+        bulan: spp.month,
+        tahun: spp.year,
+        nominal: 2500000,
+        remainder: spp.remainder,
+        status: spp.status,
+        tanggalDibuat: spp.createdAt,
+    })),
+  ]
+  
 
     return this._success({
+      message: { en: 'Payment fetched successfully', id: 'Pembayaran berhasil diambil' },
+      data: formatted
       message: {
         en: 'Payment fetched successfully',
         id: 'Pembayaran berhasil diambil',
@@ -335,6 +367,7 @@ export class PaymentService extends BaseResponse {
 
   }
 
+  
   // ✅ CREATE BULK
   async createBulk(dtos: CreatePaymentDto[]) {
     const payments = await Promise.all(
