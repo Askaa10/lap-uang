@@ -37,12 +37,12 @@ export class ExpenseController {
     return this.service.getAll(categoryName, query);
   }
 
-  @Get(':id')
+  @Get('/detail/:id')
   detail(@Param('id') id: string) {
     return this.service.detailById(id);
   }
 
-  @Patch(':id')
+  @Patch('/update/:id')
   update(@Param('id') id: string, @Body() dto: Partial<CreateExpenseDto>) {
     return this.service.updateExpense(id, dto);
   }
