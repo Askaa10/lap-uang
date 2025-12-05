@@ -68,6 +68,44 @@ export class SppPaymentService extends BaseResponse {
       included: ['student', 'spp-payment'],
     });
   }
+  async createBulk(dtos: CreateSppPaymentDto[]) {
+    const results = [];
+  
+    for (const dto of dtos) {
+      // Cek apakah sudah ada supaya tidak duplicate
+      const exists = await this.sppPaymentRepository.findOne({
+        where: {
+          studentId: dto.studentId,
+          month: dto.month,
+          year: dto.year,
+        },
+      });
+  
+      if (exists) {
+        results.push({
+          ...exists,
+          note: 'Sudah ada (skip)',
+        });
+        continue;
+      }
+  
+      const payment = this.sppPaymentRepository.create(dto);
+      const saved = await this.sppPaymentRepository.save(payment);
+  
+      results.push({
+        ...saved,
+        note: 'Berhasil dibuat',
+      });
+    }
+  
+    return this._success({
+      message: {
+        en: 'Bulk SPP created successfully',
+        id: 'SPP bulk berhasil dibuat'
+      },
+      data: results
+    });
+  }
 
   async generateSppForStudent(studentId: string, year: string, nominal: number) {
     const student = await this.studentRepo.findOneBy({ id: studentId });

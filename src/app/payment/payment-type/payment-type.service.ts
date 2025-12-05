@@ -60,6 +60,16 @@ export class PaymentTypeService extends BaseResponse {
     console.log(`✅ Generated ${payments.length} payments`);
   }
 
+  private getInitialPaymentStatus(category: CategoryTypes) {
+    switch (category) {
+      case CategoryTypes.INSTALLMENT:
+        return PaymentStatus.NYICIL;
+  
+      case CategoryTypes.NORMAL:
+      default:
+        return PaymentStatus.BELUM_LUNAS;
+    }}
+
   // ==========================================================
   //    CREATE PAYMENT TYPE
   // ==========================================================
@@ -185,9 +195,7 @@ export class PaymentTypeService extends BaseResponse {
     });
   }
 
-  // ==========================================================
-  //   UPDATE PAYMENT TYPE
-  // ==========================================================
+
   async update(id: string, dto: UpdatePaymentTypeDto) {
     const existing = await this.repo.findOne({
       where: { id },
@@ -201,41 +209,26 @@ export class PaymentTypeService extends BaseResponse {
     // ============================================
     // 1️⃣ HANDLE RELASI SISWA
     // ============================================
-  
     const oldStudents = existing.students;
     let newStudents = [];
   
-    // ❗ KASUS 1: FE KIRIM studentIds ada isinya
     if (Array.isArray(dto.studentIds) && dto.studentIds.length > 0) {
       newStudents = await this.studentRepo.findBy({
         id: In(dto.studentIds),
       });
-  
-      if (newStudents.length === 0) {
-        throw new NotFoundException('Siswa tidak ditemukan untuk ID yang dikirim');
-      }
-    }
-  
-    // ❗ KASUS 2: FE KIRIM studentIds = [] -> hapus semua
-    else if (Array.isArray(dto.studentIds) && dto.studentIds.length === 0) {
+    } else if (Array.isArray(dto.studentIds) && dto.studentIds.length === 0) {
       newStudents = [];
-    }
-  
-    // ❗ KASUS 3: FE TIDAK KIRIM studentIds
-    // → otomatis ambil SEMUA siswa seperti CREATE
-    else if (dto.studentIds === undefined) {
+    } else if (dto.studentIds === undefined) {
       newStudents = await this.studentRepo.find({
         where: { isDelete: false },
       });
     }
   
-    // Set relasi baru
     existing.students = newStudents;
   
     // ============================================
-    // 2️⃣ HANDLE PERUBAHAN DI PAYMENT
+    // 2️⃣ HAPUS PAYMENT UNTUK SISWA DIHAPUS
     // ============================================
-  
     const removedStudents = oldStudents.filter(
       (old) => !newStudents.some((s) => s.id === old.id),
     );
@@ -247,6 +240,9 @@ export class PaymentTypeService extends BaseResponse {
       });
     }
   
+    // ============================================
+    // 3️⃣ TAMBAH PAYMENT UNTUK SISWA BARU
+    // ============================================
     const addedStudents = newStudents.filter(
       (s) => !oldStudents.some((old) => old.id === s.id),
     );
@@ -261,11 +257,17 @@ export class PaymentTypeService extends BaseResponse {
         remainder: existing.nominal,
         date: new Date(),
         method: 'NORMAL',
+  
+        // ⭐ status mengikuti kategori payment type
+        status: this.getInitialPaymentStatus(existing.type),
       });
   
       await this.paymentRepo.save(newPayment);
     }
   
+    // ============================================
+    // 4️⃣ UPDATE PAYMENT EXISTING (nominal berubah)
+    // ============================================
     const existingPayments = await this.paymentRepo.find({
       where: { type: { id: existing.id } },
       relations: ['student'],
@@ -277,7 +279,7 @@ export class PaymentTypeService extends BaseResponse {
     }
   
     // ============================================
-    // 3️⃣ SAVE & RETURN
+    // 5️⃣ SAVE PAYMENT TYPE
     // ============================================
     const saved = await this.repo.save(existing);
   
@@ -289,6 +291,7 @@ export class PaymentTypeService extends BaseResponse {
       },
     });
   }
+  
   // ==========================================================
   //   DELETE
   // ==========================================================

@@ -26,11 +26,14 @@ export class SppPaymentController {
   }
 
   @Get('semua')
-
   findAll() {
     return this.sppPaymentService.findAll();
-
    }
+
+   @Post('bulk')
+createBulk(@Body() dtos: CreateSppPaymentDto[]) {
+  return this.sppPaymentService.createBulk(dtos);
+}
   
   @Get("student/:id/:yearBefore/:yearNext")
   getByStudentId(@Param('id') studentID: string , @Param('yearBefore') yearBefore: string, @Param('yearNext') yearNext: string) {
