@@ -75,6 +75,64 @@ export class StudentService {
     };
   }
 
+  async createMany(createStudentDtos: CreateStudentDto[]) {
+    // 1. Buat entity student banyak sekaligus
+    const studentEntities = this.studentRepository.create(createStudentDtos);
+
+    // 2. Save semua student langsung bulk insert
+    const savedStudents = await this.studentRepository.save(studentEntities);
+
+    // 3. Buat 36 bulan data SPP untuk tiap student
+    const sppList: SppPayment[] = [];
+    const startDate = new Date();
+
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    for (const student of savedStudents) {
+      for (let i = 0; i < 36; i++) {
+        const date = new Date(startDate);
+        date.setMonth(startDate.getMonth() + i);
+
+        // Jika belum ada tipeProgram, set default nominal = 0
+        const nominal = 0;
+
+        const sppPayment = new SppPayment();
+        sppPayment.student = student;
+        sppPayment.studentId = student.id;
+        sppPayment.month = months[date.getMonth()];
+        sppPayment.year = date.getFullYear().toString();
+        sppPayment.nominal = nominal;
+        sppPayment.status = 'BELUM_LUNAS';
+        sppPayment.paidAt = null;
+        sppPayment.remainder = nominal;
+        sppPayment.paid = 0;
+
+        sppList.push(sppPayment);
+      }
+    }
+
+    // 4. Save semua SPP sekaligus
+    await this.SPrepo.save(sppList);
+
+    return {
+      message: `${savedStudents.length} students created with 36 months of SPP each`,
+      data: savedStudents,
+    };
+  }
+
   // ✅ GET SEMUA STUDENT + DATA SPP
   async findAll() {
     const students = await this.studentRepository.find({

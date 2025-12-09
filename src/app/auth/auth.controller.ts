@@ -66,10 +66,17 @@ export class AuthController {
     @Body('resetSessionId') resetSessionId: string,
     @Body('newPassword') newPassword: string,
   ) {
-    return this.authService.resetPasswordWithSession(resetSessionId, newPassword);
+    return this.authService.resetPasswordWithSession(
+      resetSessionId,
+      newPassword,
+    );
   }
 
-  
+  @Post('change/password/:id')
+  async changePass(@Param('id') id: string, @Body() payload: any) {
+    return await this.authService.changePass(id, payload);
+  }
+
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
   async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {

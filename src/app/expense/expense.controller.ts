@@ -29,6 +29,11 @@ export class ExpenseController {
     return this.service.createMany(dtos);
   }
 
+  @Post() 
+  async createExpense(@Body() payload:CreateExpenseDto) {
+    return await this.service.createExpense(payload)
+    }
+
   @Get('/:ct')
   async getByCategory(
     @Param('ct') categoryName: string,

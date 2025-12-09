@@ -10,6 +10,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:3050',
       'https://laporan-uang-sekolah.vercel.app',
+      "https://lap-uang-fe-tawny.vercel.app"
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: ['Content-Type', 'Authorization'],

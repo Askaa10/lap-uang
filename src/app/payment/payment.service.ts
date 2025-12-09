@@ -347,6 +347,7 @@ export class PaymentService extends BaseResponse {
         await this.paymentRepo.update(
           { id: py.id },
           {
+            status: PaymentStatus.NYICIL,
             remainder: updatedRemainder,
             paid: py.paid + bayar, // total paid cumulative
           },

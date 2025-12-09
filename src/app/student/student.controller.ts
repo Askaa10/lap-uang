@@ -21,6 +21,12 @@ export class StudentController {
   async create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentService.create(createStudentDto);
   }
+  
+  @Post('createBulk')
+  async createMany(@Body() createStudentDtos: CreateStudentDto[]) {
+    return this.studentService.createMany(createStudentDtos);
+  }
+
   @Get()
   async findAll() {
     return this.studentService.findAll();

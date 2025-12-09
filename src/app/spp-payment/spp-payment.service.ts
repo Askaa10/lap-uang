@@ -53,7 +53,7 @@ export class SppPaymentService extends BaseResponse {
       const monthData = {};
       for (const m of months) {
         const payment = studentPayments.find((p) => p.month === m);
-        monthData[m.toLowerCase()] = payment ? payment.status : 'BELUM_BAYAR';
+        monthData[m.toLowerCase()] = payment ? payment.status : payment.status;
       }
   
       return {
@@ -66,6 +66,44 @@ export class SppPaymentService extends BaseResponse {
     return this._success({
       data: result,
       included: ['student', 'spp-payment'],
+    });
+  }
+  async createBulk(dtos: CreateSppPaymentDto[]) {
+    const results = [];
+  
+    for (const dto of dtos) {
+      // Cek apakah sudah ada supaya tidak duplicate
+      const exists = await this.sppPaymentRepository.findOne({
+        where: {
+          studentId: dto.studentId,
+          month: dto.month,
+          year: dto.year,
+        },
+      });
+  
+      if (exists) {
+        results.push({
+          ...exists,
+          note: 'Sudah ada (skip)',
+        });
+        continue;
+      }
+  
+      const payment = this.sppPaymentRepository.create(dto);
+      const saved = await this.sppPaymentRepository.save(payment);
+  
+      results.push({
+        ...saved,
+        note: 'Berhasil dibuat',
+      });
+    }
+  
+    return this._success({
+      message: {
+        en: 'Bulk SPP created successfully',
+        id: 'SPP bulk berhasil dibuat'
+      },
+      data: results
     });
   }
 

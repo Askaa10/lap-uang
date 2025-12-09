@@ -115,7 +115,6 @@ export class AuthService extends BaseResponse {
     return this.userRepo.save(user);
   }
 
-  
   async myProfile(id: string) {
     return this.userRepo.findOne({
       where: { id },
@@ -123,7 +122,7 @@ export class AuthService extends BaseResponse {
     });
   }
 
-async forgotPassword(email: string) {
+  async forgotPassword(email: string) {
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) throw new BadRequestException('Email tidak ditemukan');
 
@@ -147,7 +146,10 @@ async forgotPassword(email: string) {
       );
 
       if (process.env.NODE_ENV !== 'production') {
-        console.log('ForgotPassword: token generated', { userId: user.id, token });
+        console.log('ForgotPassword: token generated', {
+          userId: user.id,
+          token,
+        });
         console.log('ForgotPassword: mailer result', sendResult);
       }
     } catch (err) {
@@ -163,32 +165,29 @@ async forgotPassword(email: string) {
     return { message: 'Kode telah dikirim ke email' };
   }
 
-
-
-
   async resetPasswordWithSession(resetSessionId: string, newPassword: string) {
-  const rec = await this.resetPasswordRepo.findOne({
-    where: { sessionId: resetSessionId },
-  });
+    const rec = await this.resetPasswordRepo.findOne({
+      where: { sessionId: resetSessionId },
+    });
 
-  if (!rec) throw new BadRequestException("Session tidak valid");
+    if (!rec) throw new BadRequestException('Session tidak valid');
 
-  const diff = (Date.now() - rec.sessionCreatedAt.getTime()) / 1000;
-  if (diff > 300) throw new BadRequestException("Session expired");
+    const diff = (Date.now() - rec.sessionCreatedAt.getTime()) / 1000;
+    if (diff > 300) throw new BadRequestException('Session expired');
 
-  const user = await this.userRepo.findOne({ where: { id: rec.userId } });
+    const user = await this.userRepo.findOne({ where: { id: rec.userId } });
 
-  const hashed = await bcrypt.hash(newPassword, 10);
-  user.password = hashed;
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
 
-  await this.userRepo.save(user);
-  await this.resetPasswordRepo.delete({ id: rec.id });
+    await this.userRepo.save(user);
+    await this.resetPasswordRepo.delete({ id: rec.id });
 
-  return { message: "Password berhasil diubah" };
-}
+    return { message: 'Password berhasil diubah' };
+  }
 
   // Verify a reset token. Accepts { userId?: string, email?: string, token: string }
- async verifyResetToken(email: string, token: string) {
+  async verifyResetToken(email: string, token: string) {
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) throw new BadRequestException('User tidak ditemukan');
 
@@ -215,27 +214,52 @@ async forgotPassword(email: string) {
     };
   }
 
-async changePassword(dto: ChangePasswordDto) {
-  const user = await this.userRepo.findOne({ where: { email: dto.email } });
+  async changePassword(dto: ChangePasswordDto) {
+    const user = await this.userRepo.findOne({ where: { email: dto.email } });
 
-  if (!user) throw new NotFoundException("User tidak ditemukan");
+    if (!user) throw new NotFoundException('User tidak ditemukan');
 
-  // Hash password baru
-  const hashed = await bcrypt.hash(dto.newPassword, 10);
+    // Hash password baru
+    const hashed = await bcrypt.hash(dto.newPassword, 10);
 
-  // Generate resetSessionId otomatis
-  const newResetSessionId = crypto.randomBytes(32).toString("hex");
+    // Generate resetSessionId otomatis
+    const newResetSessionId = crypto.randomBytes(32).toString('hex');
 
-  user.password = hashed;
-  user.resetSessionId = newResetSessionId;
+    user.password = hashed;
+    user.resetSessionId = newResetSessionId;
 
-  await this.userRepo.save(user);
+    await this.userRepo.save(user);
 
-  return {
-    message: "Password berhasil diubah",
-    resetSessionId: newResetSessionId,
-  };
+    return {
+      message: 'Password berhasil diubah',
+      resetSessionId: newResetSessionId,
+    };
+  }
+
+  async changePass(id: string, payload: any) {
+    const { newPass } = payload;
+    const user = await this.userRepo.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('user tidak ditemukan', 422);
+    }
+    const hash = await bcrypt.hash(newPass, 10);
+    await this.userRepo.update(id, {
+      password: hash,
+    });
+
+    return this._success({
+      message: {
+        id: "sukses untuk mengubah password akun ini",
+        en: "succes change account password"
+      },
+      data: {
+        id,
+      }
+    })
+  }
 }
-
-}
-

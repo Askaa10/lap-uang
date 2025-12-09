@@ -18,6 +18,13 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { PaymentTypeModule } from './app/payment/payment-type/payment-type.module';
 import { PaymentHistoryModule } from './app/payment/payment-history/payment-history.module';
 import { MailModule } from './mail/mail.module';
+import { ExpenseService } from './app/expense/expense.service';
+import { PaymentHistoryService } from './app/payment/payment-history/payment-history.service';
+import { SppPaymentService } from './app/spp-payment/spp-payment.service';
+import { Expense } from './app/expense/expense.entity';
+import { SppPayment } from './app/spp-payment/spp-payment.entity';
+import { PaymentHistory } from './app/payment/payment-history/payment-history.entity';
+import { CategoryExpense } from './app/expense/category/category-expense.entity';
 
 @Module({
   imports: [
@@ -32,6 +39,7 @@ import { MailModule } from './mail/mail.module';
         return { ...typeOrmConfig, synchronize: true, autoLoadEntities: true };
       },
     }),
+    TypeOrmModule.forFeature([Expense, SppPayment, PaymentHistory, CategoryExpense]),
     ScheduleModule.forRoot(),
     AuthModule,
     MailModule,
@@ -47,6 +55,6 @@ import { MailModule } from './mail/mail.module';
     ProfileModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ExpenseService, PaymentHistoryService, SppPaymentService],
 })
 export class AppModule {}

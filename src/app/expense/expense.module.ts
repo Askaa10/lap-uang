@@ -18,6 +18,6 @@ import { SubCategory } from './sub-category/sub-cateogry.entity';
   imports: [TypeOrmModule.forFeature([Expense, CategoryExpense, SubCategory])],
   providers: [ExpenseService, CategoryExpenseService, SubCategoryService],
   controllers: [ExpenseController,CategoryExpenseController, SubCategoryController],
-  exports: [ExpenseService], // jika dipakai di module lain
+ // jika dipakai di module lain
 })
 export class ExpenseModule {}
