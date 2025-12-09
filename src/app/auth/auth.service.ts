@@ -259,6 +259,7 @@ export class AuthService extends BaseResponse {
       },
       data: {
         id,
+        hash
       }
     })
   }

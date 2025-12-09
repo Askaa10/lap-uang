@@ -7,9 +7,11 @@ import { PaymentType } from '../payment/payment-type/payment-type.entity';
 import { CreateStudentDto } from './student.dto';
 import { SppPayment } from '../spp-payment/spp-payment.entity';
 import { spawn } from 'child_process';
+import { StudentStatus } from './student.enum';
+import { BaseResponse } from 'src/utils/response/base.response';
 
 @Injectable()
-export class StudentService {
+export class StudentService extends BaseResponse {
   constructor(
     @InjectRepository(Student)
     private studentRepository: Repository<Student>,
@@ -22,7 +24,9 @@ export class StudentService {
 
     @InjectRepository(PaymentType)
     private paymentTypeRepository: Repository<PaymentType>,
-  ) {}
+  ) {
+    super();
+  }
 
   // ✅ CREATE STUDENT + AUTO 36 BULAN SPP
   async create(createStudentDto: CreateStudentDto) {
@@ -137,6 +141,7 @@ export class StudentService {
   async findAll() {
     const students = await this.studentRepository.find({
       relations: ['spp'],
+      where: { isDelete: false },
       order: { createdAt: 'DESC' },
     });
 
@@ -172,5 +177,40 @@ export class StudentService {
     return {
       message: 'Student and related SPP data deleted successfully',
     };
+  }
+
+  async DeleteStudentStatus(id: string) {
+    const student = await this.studentRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    await this.studentRepository.update(id, {
+      isDelete: true,
+    });
+
+    return this._success({
+      data: student,
+    });
+  }
+
+  async updateStudent(id:string, payload:any) {
+    const student = await this.studentRepository.findOne({
+      where: {
+        id,
+
+      },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    await this.studentRepository.update(id, payload)
   }
 }

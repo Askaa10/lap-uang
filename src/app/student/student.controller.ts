@@ -21,16 +21,26 @@ export class StudentController {
   async create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentService.create(createStudentDto);
   }
-  
+
   @Post('createBulk')
   async createMany(@Body() createStudentDtos: CreateStudentDto[]) {
     return this.studentService.createMany(createStudentDtos);
   }
 
+  @Patch('/updateStatusDelete/:id')
+  async updateIsDeleteStudent(@Param('id') id: string) {
+    return await this.studentService.DeleteStudentStatus(id);
+  }
   @Get()
   async findAll() {
     return this.studentService.findAll();
   }
+
+
+  @Patch('/update/:id')
+  async updateStudent(@Param('id') id: string, @Body() payload: UpdateStudentDto) {
+    return await this.studentService.updateStudent(id, payload);
+    }
 
   // GET student berdasarkan id
   @Get(':id')
