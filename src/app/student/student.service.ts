@@ -80,15 +80,11 @@ export class StudentService extends BaseResponse {
   }
 
   async createMany(createStudentDtos: CreateStudentDto[]) {
-    // 1. Buat entity student banyak sekaligus
+    // === 1. Bulk Insert Student (1 QUERY SAJA) ===
     const studentEntities = this.studentRepository.create(createStudentDtos);
-
-    // 2. Save semua student langsung bulk insert
     const savedStudents = await this.studentRepository.save(studentEntities);
 
-    // 3. Buat 36 bulan data SPP untuk tiap student
-    const sppList: SppPayment[] = [];
-    const startDate = new Date();
+    // === 2. Generate Bulk SPP untuk 36 bulan ===
 
     const months = [
       'Januari',
@@ -105,31 +101,32 @@ export class StudentService extends BaseResponse {
       'Desember',
     ];
 
-    for (const student of savedStudents) {
-      for (let i = 0; i < 36; i++) {
-        const date = new Date(startDate);
-        date.setMonth(startDate.getMonth() + i);
+    const now = new Date();
 
-        // Jika belum ada tipeProgram, set default nominal = 0
-        const nominal = 0;
+    const sppList = savedStudents.flatMap((student) =>
+      Array.from({ length: 36 }).map((_, i) => {
+        const d = new Date(now);
+        d.setMonth(now.getMonth() + i);
 
-        const sppPayment = new SppPayment();
-        sppPayment.student = student;
-        sppPayment.studentId = student.id;
-        sppPayment.month = months[date.getMonth()];
-        sppPayment.year = date.getFullYear().toString();
-        sppPayment.nominal = nominal;
-        sppPayment.status = 'BELUM_LUNAS';
-        sppPayment.paidAt = null;
-        sppPayment.remainder = nominal;
-        sppPayment.paid = 0;
+        return {
+          studentId: student.id,
+          month: months[d.getMonth()],
+          year: d.getFullYear().toString(),
+          nominal: student.tipeProgram == 'FULLDAY' ? 1000000 : 2500000,
+          status: 'BELUM_LUNAS',
+          paidAt: null,
+          remainder: student.tipeProgram == 'FULLDAY' ? 1000000 : 2500000,
+          paid: 0,
+        };
+      }),
+    );
 
-        sppList.push(sppPayment);
-      }
-    }
-
-    // 4. Save semua SPP sekaligus
-    await this.SPrepo.save(sppList);
+    // === 3. Bulk Insert SPP (1 QUERY SAJA) ===
+    await this.SPrepo.createQueryBuilder()
+      .insert()
+      .into(SppPayment)
+      .values(sppList)
+      .execute();
 
     return {
       message: `${savedStudents.length} students created with 36 months of SPP each`,
@@ -199,11 +196,10 @@ export class StudentService extends BaseResponse {
     });
   }
 
-  async updateStudent(id:string, payload:any) {
+  async updateStudent(id: string, payload: any) {
     const student = await this.studentRepository.findOne({
       where: {
         id,
-
       },
     });
 
@@ -211,6 +207,6 @@ export class StudentService extends BaseResponse {
       throw new NotFoundException('Student not found');
     }
 
-    await this.studentRepository.update(id, payload)
+    await this.studentRepository.update(id, payload);
   }
 }

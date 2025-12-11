@@ -19,17 +19,16 @@ export class SppPaymentService extends BaseResponse {
   }
 
   async getSppRekap(yearBefore: string, yearNext: string) {
-   
     const students = await this.studentRepo.find({
       where: { isDelete: false },
     });
-  
+
     // Ambil semua pembayaran SPP tahun tertentu
     const payments = await this.sppPaymentRepository.find({
       where: { year: Between(yearBefore, yearNext) },
       relations: ['student'],
     });
-  
+
     const months = [
       'Januari',
       'Februari',
@@ -44,25 +43,30 @@ export class SppPaymentService extends BaseResponse {
       'November',
       'Desember',
     ];
-  
+
     const result = students.map((student) => {
       const studentPayments = payments.filter(
         (p) => p.studentId === student.id,
       );
-  
+
       const monthData = {};
       for (const m of months) {
         const payment = studentPayments.find((p) => p.month === m);
-        monthData[m.toLowerCase()] = payment ? payment.status : payment.status;
+        monthData[m.toLowerCase()] = payment ? payment?.status : 'BELUM_LUNAS';
       }
-  
+
       return {
+        id: student.id,
         nama: student.name,
-        generation: student.generation, // ⬅️ DITAMBAHKAN DI SINI
+        InductNumber: student.InductNumber,
+        tipeProgram: student.tipeProgram,
+        dorm: student.dorm,
+        generation: student.generation,
+        // ⬅️ DITAMBAHKAN DI SINI
         ...monthData,
       };
     });
-  
+
     return this._success({
       data: result,
       included: ['student', 'spp-payment'],
@@ -70,7 +74,7 @@ export class SppPaymentService extends BaseResponse {
   }
   async createBulk(dtos: CreateSppPaymentDto[]) {
     const results = [];
-  
+
     for (const dto of dtos) {
       // Cek apakah sudah ada supaya tidak duplicate
       const exists = await this.sppPaymentRepository.findOne({
@@ -80,7 +84,7 @@ export class SppPaymentService extends BaseResponse {
           year: dto.year,
         },
       });
-  
+
       if (exists) {
         results.push({
           ...exists,
@@ -88,43 +92,57 @@ export class SppPaymentService extends BaseResponse {
         });
         continue;
       }
-  
+
       const payment = this.sppPaymentRepository.create(dto);
       const saved = await this.sppPaymentRepository.save(payment);
-  
+
       results.push({
         ...saved,
         note: 'Berhasil dibuat',
       });
     }
-  
+
     return this._success({
       message: {
         en: 'Bulk SPP created successfully',
-        id: 'SPP bulk berhasil dibuat'
+        id: 'SPP bulk berhasil dibuat',
       },
-      data: results
+      data: results,
     });
   }
 
-  async generateSppForStudent(studentId: string, year: string, nominal: number) {
+  async generateSppForStudent(
+    studentId: string,
+    year: string,
+    nominal: number,
+  ) {
     const student = await this.studentRepo.findOneBy({ id: studentId });
     if (!student) throw new NotFoundException('Student not found');
-  
+
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
-  
+
     // Cek apakah SPP tahun tersebut sudah ada
     const existing = await this.sppPaymentRepository.find({
       where: { studentId, year },
     });
-  
+
     if (existing.length > 0) {
       throw new Error(`SPP ${year} untuk siswa ini sudah pernah digenerate`);
     }
-  
+
     const list = months.map((month) =>
       this.sppPaymentRepository.create({
         studentId,
@@ -136,9 +154,9 @@ export class SppPaymentService extends BaseResponse {
         status: 'BELUM_LUNAS',
       }),
     );
-  
+
     await this.sppPaymentRepository.save(list);
-  
+
     return this._success({
       message: {
         en: `SPP ${year} successfully generated for all students`,
@@ -147,15 +165,16 @@ export class SppPaymentService extends BaseResponse {
       data: list,
     });
   }
-  
 
   async generateSppForAllStudents(year: string, nominal: number) {
-    const students = await this.studentRepo.find({ where: { isDelete: false } });
-  
+    const students = await this.studentRepo.find({
+      where: { isDelete: false },
+    });
+
     for (const student of students) {
       await this.generateSppForStudent(student.id, year, nominal);
     }
-  
+
     return this._success({
       message: {
         en: `SPP ${year} successfully generated for all students`,
@@ -163,28 +182,37 @@ export class SppPaymentService extends BaseResponse {
       },
     });
   }
-  
 
-  async getByStudentId(studentID:string, year:string) {
+  async getByStudentId(studentID: string, year: string) {
     const result = await this.studentRepo.findOne({
-      where: { id: studentID, spp: {year: year} },
-      relations: ['spp']
+      where: { id: studentID, spp: { year: year } },
+      relations: ['spp'],
     });
 
-    return this._success({data:result})
+    return this._success({ data: result });
   }
 
   async create(dto: CreateSppPaymentDto) {
-    const payment = this.sppPaymentRepository.create(dto);
+    // pastikan nominal dalam bentuk number
+    const nominal = Number(dto.nominal) || 0;
+
+    const payment = this.sppPaymentRepository.create({
+      ...dto,
+      nominal,
+      paid: nominal, // langsung set paid di sini
+      remainder: 0, // karena paid = nominal, sisa = 0
+    });
+
     await this.sppPaymentRepository.save(payment);
+
     return this._success({ data: payment });
   }
 
   async findAll() {
     const payments = await this.sppPaymentRepository.find({
-      relations: ["student"],
+      relations: ['student'],
     });
-    return this._success({ data: payments, included: ["student"] });
+    return this._success({ data: payments, included: ['student'] });
   }
 
   async findOne(id: string) {

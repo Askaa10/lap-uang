@@ -10,9 +10,12 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   synchronize: true,
   // logging: true,
   extra: {
-    connectionLimit: 10, // batas koneksi di pool
+    connectionLimit: 50, // batas koneksi di pool
+    queueLimit: 0,
     waitForConnections: true, // kalau pool penuh, tunggu bukan error
     enableKeepAlive: true, // aktifkan TCP keepalive
-    keepAliveInitialDelay: 10000, // delay keepalive (ms)
+    keepAliveInitialDelay: 20000, // delay keepalive (ms)
+    connectTimeout: 10000,
   },
+ 
 };
