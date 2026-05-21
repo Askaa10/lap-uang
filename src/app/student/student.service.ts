@@ -84,7 +84,7 @@ export class StudentService extends BaseResponse {
     const studentEntities = this.studentRepository.create(createStudentDtos);
     const savedStudents = await this.studentRepository.save(studentEntities);
 
-    // === 2. Generate Bulk SPP untuk 36 bulan ===
+    // === 2. Generate Bulk SPP untuk 3 tahun ajaran ===
 
     const months = [
       'Januari',
@@ -101,25 +101,28 @@ export class StudentService extends BaseResponse {
       'Desember',
     ];
 
-    const now = new Date();
+    const sppList = savedStudents.flatMap((student) => {
+      const startYear = new Date().getFullYear() // Tahun siswa masuk sekolah
+      const startMonthIndex = 6; // Juli (index ke-6)
 
-    const sppList = savedStudents.flatMap((student) =>
-      Array.from({ length: 36 }).map((_, i) => {
-        const d = new Date(now);
-        d.setMonth(now.getMonth() + i);
+      return Array.from({ length: 36 }).map((_, i) => {
+        // bulan + tahun bergeser otomatis
+        const d = new Date(startYear, startMonthIndex + i);
+
+        const nominal = student.tipeProgram === 'FULLDAY' ? 1000000 : 2500000;
 
         return {
           studentId: student.id,
           month: months[d.getMonth()],
           year: d.getFullYear().toString(),
-          nominal: student.tipeProgram == 'FULLDAY' ? 1000000 : 2500000,
+          nominal,
           status: 'BELUM_LUNAS',
           paidAt: null,
-          remainder: student.tipeProgram == 'FULLDAY' ? 1000000 : 2500000,
           paid: 0,
+          remainder: nominal,
         };
-      }),
-    );
+      });
+    });
 
     // === 3. Bulk Insert SPP (1 QUERY SAJA) ===
     await this.SPrepo.createQueryBuilder()
@@ -129,7 +132,7 @@ export class StudentService extends BaseResponse {
       .execute();
 
     return {
-      message: `${savedStudents.length} students created with 36 months of SPP each`,
+      message: `${savedStudents.length} students created with 36 months of SPP each based on academic year`,
       data: savedStudents,
     };
   }

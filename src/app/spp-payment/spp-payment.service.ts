@@ -1,7 +1,7 @@
 // spp-payment.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { SppPayment } from './spp-payment.entity';
 import { BaseResponse } from '../../utils/response/base.response';
 import { CreateSppPaymentDto, UpdateSppPaymentDto } from './spp-payment.dto';
@@ -19,40 +19,61 @@ export class SppPaymentService extends BaseResponse {
   }
 
   async getSppRekap(yearBefore: string, yearNext: string) {
+    // ambil semua siswa aktif
     const students = await this.studentRepo.find({
       where: { isDelete: false },
     });
 
-    // Ambil semua pembayaran SPP tahun tertentu
+    if (!students.length) {
+      return this._success({
+        data: [],
+        included: ['student', 'spp-payment'],
+      });
+    }
+
+    const studentIds = students.map((s) => s.id);
+
+    // ambil semua pembayaran SPP dalam rentang tahun itu, hanya untuk siswa yang ada
     const payments = await this.sppPaymentRepository.find({
-      where: { year: Between(yearBefore, yearNext) },
-      relations: ['student'],
+      where: {
+        studentId: In(studentIds),
+        year: Between(yearBefore, yearNext),
+      },
     });
 
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
+    // bikin index biar lookup cepat: "studentId-month-year" -> payment
+    const paymentIndex = new Map<string, SppPayment>();
+    for (const p of payments) {
+      const key = `${p.studentId}-${p.month}-${p.year}`;
+      paymentIndex.set(key, p);
+    }
+
+    // bulan pakai pola tahun ajaran: Juli–Des (yearBefore), Jan–Jun (yearNext)
+    const monthYearPairs = [
+      { month: 'Juli', year: yearBefore },
+      { month: 'Agustus', year: yearBefore },
+      { month: 'September', year: yearBefore },
+      { month: 'Oktober', year: yearBefore },
+      { month: 'November', year: yearBefore },
+      { month: 'Desember', year: yearBefore },
+      { month: 'Januari', year: yearNext },
+      { month: 'Februari', year: yearNext },
+      { month: 'Maret', year: yearNext },
+      { month: 'April', year: yearNext },
+      { month: 'Mei', year: yearNext },
+      { month: 'Juni', year: yearNext },
     ];
 
     const result = students.map((student) => {
-      const studentPayments = payments.filter(
-        (p) => p.studentId === student.id,
-      );
+      const monthData: Record<string, string> = {};
 
-      const monthData = {};
-      for (const m of months) {
-        const payment = studentPayments.find((p) => p.month === m);
-        monthData[m.toLowerCase()] = payment ? payment?.status : 'BELUM_LUNAS';
+      for (const { month, year } of monthYearPairs) {
+        const key = `${student.id}-${month}-${year}`;
+        const payment = paymentIndex.get(key);
+
+        // kalau ada data → pakai status asli
+        // kalau tidak ada → default BELUM_LUNAS
+        monthData[month.toLowerCase()] = payment?.status ?? 'BELUM_LUNAS';
       }
 
       return {
@@ -62,7 +83,6 @@ export class SppPaymentService extends BaseResponse {
         tipeProgram: student.tipeProgram,
         dorm: student.dorm,
         generation: student.generation,
-        // ⬅️ DITAMBAHKAN DI SINI
         ...monthData,
       };
     });
@@ -72,6 +92,7 @@ export class SppPaymentService extends BaseResponse {
       included: ['student', 'spp-payment'],
     });
   }
+
   async createBulk(dtos: CreateSppPaymentDto[]) {
     const results = [];
 
